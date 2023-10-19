@@ -1,3 +1,5 @@
+import { Schema } from "./services/general/schema";
+
 export const BASIC_RELAYS_KEY = "nostr-cms.basic-relays";
 export const HOSTR_RELAYS_KEY = "nostr-cms.hostr-relays";
 export const CUSTOM_APP_DATA_RELAYS_KEY = "nostr-cms.app-data-relays";
@@ -13,3 +15,53 @@ export const DEFAULT_CUSTOM_APP_DATA_RELAYS = ["ws://127.0.0.1:7002"];
 export const CLIENT = "noscms.pages.dev";
 export const RESERVED_CONTENT_TAGS = ["d", "s", "o"];
 export const RESERVED_SCHEMA_TAGS = ["d", "title", "t", "articles"];
+export const ARTICLES_SCHEMA: Schema = {
+  id: "articles",
+  label: "Articles",
+  type: "",
+  fields: [
+    {
+      key: "image",
+      label: "Image",
+      type: {
+        unit: "single",
+        primitive: "image",
+      },
+      userEditable: true,
+      optional: false,
+    },
+    {
+      key: "title",
+      label: "Title",
+      type: {
+        unit: "single",
+        primitive: "string",
+      },
+      userEditable: true,
+      optional: false,
+    },
+    {
+      key: "published_at",
+      label: "Published",
+      type: {
+        unit: "single",
+        primitive: "date",
+      },
+      userEditable: false,
+      optional: false,
+    },
+    {
+      key: "client",
+      label: "Client",
+      type: {
+        unit: "single",
+        primitive: "url",
+      },
+      userEditable: false,
+      optional: false,
+    },
+  ],
+  writeRule: {
+    rule: "onlyAuthor",
+  },
+};
