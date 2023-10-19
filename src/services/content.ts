@@ -58,7 +58,7 @@ export const getContent = async (contentId: string) => {
   return content;
 };
 
-export const getAllContentsSchemas = () => getSchemas([], ["s"]);
+export const getAllContentsSchemas = () => getSchemas([], ["o"]);
 
 export type ContentFields = { [key: string]: string[] };
 export type Content = {
