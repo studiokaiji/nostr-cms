@@ -7,7 +7,9 @@ import { getAllContentsSchemas } from "@/services/content";
 
 export const AppShellFrame = () => {
   const { t } = useTranslation();
-  const { data: schemas } = useSWR("schemas", getAllContentsSchemas);
+  const { data: schemas } = useSWR("schemas", getAllContentsSchemas, {
+    keepPreviousData: true,
+  });
 
   return (
     <AppShell
