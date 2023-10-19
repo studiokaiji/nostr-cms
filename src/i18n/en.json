@@ -1,0 +1,18 @@
+{
+  "navigation": {
+    "sites": "Sites",
+    "contents": "Contents",
+    "articles": "Articles",
+    "assets": "Assets"
+  },
+  "contents": {
+    "schema": "Schema",
+    "articles": "Articles",
+    "status": "Status",
+    "target": "Target",
+    "published": "Published",
+    "draft": "Draft",
+    "all": "All",
+    "addContent": "Add Content"
+  }
+}
