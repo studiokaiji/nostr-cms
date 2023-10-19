@@ -7,7 +7,6 @@ import { IndexPage } from "./pages";
 import { Suspense } from "react";
 import { AppShellFrame } from "./components/AppShellFrame";
 import { ContentSchemaPage } from "./pages/contents/[schemaId]";
-import { ArticlesPage } from "./pages/contents/articles";
 
 export default function App() {
   return (
@@ -18,7 +17,6 @@ export default function App() {
             <Route path="/" element={<AppShellFrame />}>
               <Route index element={<IndexPage />} />
               <Route path="contents">
-                <Route path="articles" element={<ArticlesPage />} />
                 <Route path=":schemaId" element={<ContentSchemaPage />} />
               </Route>
             </Route>

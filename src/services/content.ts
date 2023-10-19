@@ -2,7 +2,7 @@ import { Filter, SimplePool } from "nostr-tools";
 import { getSchema, getSchemas } from "./general/schema";
 import { getBasicRelays } from "./relay";
 import { type Event, type UnsignedEvent } from "nostr-tools";
-import { CLIENT, RESERVED_CONTENT_TAGS } from "@/consts";
+import { ARTICLES_SCHEMA, CLIENT, RESERVED_CONTENT_TAGS } from "@/consts";
 
 const pool = new SimplePool();
 
@@ -36,6 +36,9 @@ export const getContents = async (
 };
 
 export const getContentsSchema = async (schemaId: string) => {
+  if (schemaId === "articles") {
+    return ARTICLES_SCHEMA;
+  }
   const schema = await getSchema(schemaId);
   return schema;
 };

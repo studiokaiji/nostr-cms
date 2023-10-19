@@ -16,13 +16,20 @@ export const ContentSchemaPage = () => {
     throw Error();
   }
 
-  const { data: schema } = useSWR(schemaId, getContentsSchema);
+  const { data: schema } = useSWR(schemaId, getContentsSchema, {
+    keepPreviousData: true,
+  });
+
   const [articlesTarget, setArticlesTarget] = useState<ContentsTarget>("all");
 
   const { data: contents } = useSWR(
     [`contents/${schemaId}`, articlesTarget],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ([_url, target]) => getContents({ target }, { "#s": [schemaId] })
+    ([_url, target]) =>
+      getContents(
+        { target },
+        schemaId === "articles" ? {} : { "#s": [schemaId] }
+      )
   );
 
   const { t } = useTranslation();
