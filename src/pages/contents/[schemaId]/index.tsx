@@ -46,7 +46,9 @@ export const ContentSchemaPage = () => {
           target={articlesTarget}
           onChange={setArticlesTarget}
         />
-        <Button>+ {t("contents.addContent")}</Button>
+        <Button component="a" href={`/contents/${schemaId}/add-content`}>
+          + {t("contents.addContent")}
+        </Button>
       </Flex>
       <ContentsTable schema={schema} contents={contents} />
     </Stack>

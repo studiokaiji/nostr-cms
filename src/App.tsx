@@ -7,7 +7,7 @@ import { IndexPage } from "./pages";
 import { Suspense } from "react";
 import { AppShellFrame } from "./components/AppShellFrame";
 import { ContentSchemaPage } from "./pages/contents/[schemaId]";
-
+import { AddContentPage } from "./pages/contents/[schemaId]/addContent";
 export default function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -17,7 +17,10 @@ export default function App() {
             <Route path="/" element={<AppShellFrame />}>
               <Route index element={<IndexPage />} />
               <Route path="contents">
-                <Route path=":schemaId" element={<ContentSchemaPage />} />
+                <Route path=":schemaId">
+                  <Route index element={<ContentSchemaPage />} />
+                  <Route path="add-content" element={<AddContentPage />} />
+                </Route>
               </Route>
             </Route>
           </Routes>
