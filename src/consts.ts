@@ -74,4 +74,5 @@ export const ARTICLES_SCHEMA: Schema = {
   writeRule: {
     rule: "onlyAuthor",
   },
+  content: "optional",
 };

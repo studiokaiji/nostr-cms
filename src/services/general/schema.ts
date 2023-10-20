@@ -72,6 +72,7 @@ export const addSchema = async (schema: Schema) => {
           fields: schema.fields,
           writeRule: schema.writeRule,
           type: schema.type,
+          content: schema.content
         }),
       ],
     ]
@@ -154,6 +155,10 @@ const schemaRawValueType = z.object({
       optional: z.boolean().optional().default(false),
     })
   ),
+  content: z
+    .union([z.literal("required"), z.literal("optional"), z.literal("never")])
+    .optional()
+    .default("optional"),
   writeRule: z.object({
     rule: z.union([
       z.literal("onlyAuthor"),
