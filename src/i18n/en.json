@@ -13,6 +13,9 @@
     "published": "Published",
     "draft": "Draft",
     "all": "All",
-    "addContent": "Add Content"
+    "addContent": "Add Content",
+    "publish": "Publish",
+    "publishedAt": "Published At",
+    "updatedAt": "Updated At"
   }
 }
