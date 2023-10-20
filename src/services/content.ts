@@ -68,7 +68,7 @@ export type Content = {
   isDraft: boolean;
   event: Event;
   pubkey: string;
-  schemaId: string;
+  schemaId?: string;
   sites: string[];
 };
 
@@ -83,7 +83,7 @@ export const nostrEventToContent = (event: Event): Content => {
   if (!dTag) {
     throw Error("Content id(d tag) is not found");
   }
-  const schemaId = event.tags.find((tags) => tags[0] === "s")?.[1] || "";
+  const schemaId = event.tags.find((tags) => tags[0] === "s")?.[1] || undefined;
 
   let sites = event.tags.find((tags) => tags[0] === "o")?.slice(1);
   if (!sites || sites.length < 1) {
@@ -125,8 +125,11 @@ export const contentInputToNostrEvent = (
   const tags: string[][] = [];
 
   tags.push(["d", contentInput.id]);
-  tags.push(["s", contentInput.schemaId]);
   tags.push(["client", CLIENT]);
+
+  if (contentInput.schemaId) {
+    tags.push(["s", contentInput.schemaId]);
+  }
 
   if (contentInput.sites) {
     tags.push(["o", ...contentInput.sites]);
