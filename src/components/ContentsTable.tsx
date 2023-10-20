@@ -48,13 +48,14 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
           const unit = field.type.unit;
           const primitive = field.type.primitive;
 
-          let parsedData = data;
-
           if (primitive === "date") {
             try {
-              parsedData = data.map((val) =>
-                new Date(Number(val) * 1000).toLocaleDateString(i18n.language)
-              );
+              const parsedData = [
+                new Date(Number(data[0]) * 1000).toLocaleDateString(
+                  i18n.language
+                ),
+              ];
+              rowChildren.push(parsedData);
             } catch (e) {
               console.error(e);
             }
@@ -66,9 +67,9 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
             primitive === "boolean"
           ) {
             if (unit === "array") {
-              rowChildren.push(parsedData.join(", "));
+              rowChildren.push(data.join(", "));
             } else {
-              rowChildren.push(parsedData[0]);
+              rowChildren.push(data[0]);
             }
           } else {
             if (primitive === "image") {
@@ -79,22 +80,20 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
                   style={{ width: "auto" }}
                   height={50}
                   fit="contain"
-                  src={parsedData[0]}
+                  src={data[0]}
                 />
               );
             } else if (primitive === "url") {
               if (unit === "array") {
-                parsedData.map((data) => (
-                  <Anchor href={data} target="_blank" />
-                ));
+                data.map((d) => <Anchor href={d} target="_blank" />);
               } else {
-                let url = parsedData[0];
+                let url = data[0];
                 if (!url.startsWith("http://") && !url.startsWith("https://")) {
                   url = "https://" + url;
                 }
                 rowChildren.push(
                   <Anchor href={url} target="_blank">
-                    {parsedData[0]}
+                    {data[0]}
                   </Anchor>
                 );
               }
