@@ -142,7 +142,7 @@ const schemaRawValueType = z.object({
       type: z.object({
         unit: z.union([z.literal("single"), z.literal("array")]),
         primitive: z.union([
-          z.literal("string"),
+          z.literal("text"),
           z.literal("number"),
           z.literal("boolean"),
           z.literal("date"),

@@ -35,7 +35,7 @@ export const ARTICLES_SCHEMA: Schema = {
       label: "Title",
       type: {
         unit: "single",
-        primitive: "string",
+        primitive: "text",
       },
       userEditable: true,
       optional: false,

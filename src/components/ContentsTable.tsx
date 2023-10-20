@@ -61,7 +61,7 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
           }
 
           if (
-            primitive === "string" ||
+            primitive === "text" ||
             primitive === "number" ||
             primitive === "boolean"
           ) {
