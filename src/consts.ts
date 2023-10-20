@@ -28,7 +28,7 @@ export const ARTICLES_SCHEMA: Schema = {
         primitive: "image",
       },
       userEditable: true,
-      optional: false,
+      optional: true,
     },
     {
       key: "title",
