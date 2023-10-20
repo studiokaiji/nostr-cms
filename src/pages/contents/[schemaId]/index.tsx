@@ -5,10 +5,14 @@ import {
 } from "@/components/ContentsTargetSelect";
 import { getContents, getContentsSchema } from "@/services/content";
 import { Button, Flex, Stack, Title } from "@mantine/core";
+import { readyNostr } from "nip07-awaiter";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import useSWR from "swr";
+
+const nostr = await readyNostr;
+const pubkey = await nostr.getPublicKey();
 
 export const ContentSchemaPage = () => {
   const { schemaId } = useParams();
@@ -23,12 +27,20 @@ export const ContentSchemaPage = () => {
   const [articlesTarget, setArticlesTarget] = useState<ContentsTarget>("all");
 
   const { data: contents } = useSWR(
-    [`contents/${schemaId}`, articlesTarget],
+    schema ? [`contents/${schemaId}`, articlesTarget] : null,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ([_url, target]) =>
       getContents(
         { target },
-        schemaId === "articles" ? {} : { "#s": [schemaId] }
+        {
+          authors:
+            schema!.writeRule.rule === "allowList"
+              ? schema?.writeRule.pubkeys
+              : schema!.writeRule.rule === "onlyAuthor"
+              ? [pubkey]
+              : undefined,
+          "#s": schemaId === "articles" ? undefined : [schemaId],
+        }
       )
   );
 
