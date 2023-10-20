@@ -41,6 +41,16 @@ export const ARTICLES_SCHEMA: Schema = {
       optional: false,
     },
     {
+      key: "summary",
+      label: "Summary",
+      type: {
+        unit: "single",
+        primitive: "text",
+      },
+      userEditable: true,
+      optional: true,
+    },
+    {
       key: "published_at",
       label: "Published",
       type: {
