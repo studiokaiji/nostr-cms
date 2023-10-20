@@ -3,6 +3,7 @@ import { getSchema, getSchemas } from "./general/schema";
 import { getBasicRelays } from "./relay";
 import { type Event, type UnsignedEvent } from "nostr-tools";
 import { ARTICLES_SCHEMA, CLIENT, RESERVED_CONTENT_TAGS } from "@/consts";
+import { readyNostr } from "nip07-awaiter";
 
 const pool = new SimplePool();
 
@@ -153,6 +154,16 @@ export const contentInputToNostrEvent = (
     created_at: Math.floor(Date.now() / 1000),
     pubkey: contentInput.pubkey,
   };
+};
+
+export const publishContent = async (contentInput: ContentInput) => {
+  const relays = getBasicRelays();
+  const nostr = await readyNostr;
+
+  const event = contentInputToNostrEvent(contentInput);
+  const signed = await nostr.signEvent(event);
+
+  await Promise.allSettled(pool.publish(relays, signed));
 };
 
 export type WriteContentVariables = {
