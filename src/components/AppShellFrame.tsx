@@ -4,12 +4,26 @@ import { LogoWithTextile } from "./LogoWithTextile";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
+import { useEffect } from "react";
 
 export const AppShellFrame = () => {
   const { t } = useTranslation();
   const { data: schemas } = useSWR("schemas", getAllContentsSchemas, {
     keepPreviousData: true,
+    revalidateOnReconnect: false,
+    fallbackData: JSON.parse(
+      localStorage.getItem("nostrcms.pages.dev-default-schemas") || "[]"
+    ),
   });
+
+  useEffect(() => {
+    if (schemas) {
+      localStorage.setItem(
+        "nostrcms.pages.dev-default-schemas",
+        JSON.stringify(schemas)
+      );
+    }
+  }, [schemas]);
 
   return (
     <AppShell
