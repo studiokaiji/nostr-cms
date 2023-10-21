@@ -104,6 +104,16 @@ export const ContentEditor = ({
       fields[key] = form.values.fields[key].map((val) => String(val));
     }
 
+    for (const field of schema.fields) {
+      if (field.type.primitive === "updatedAt") {
+        fields[field.key] = [String(Math.floor(Date.now() / 1000))];
+      } else if (field.type.primitive === "date" && fields[field.key]?.[0]) {
+        fields[field.key] = [
+          String(Math.floor(new Date(fields[field.key][0]).getTime() / 1000)),
+        ];
+      }
+    }
+
     const nostr = await readyNostr;
     const pubkey = await nostr.getPublicKey();
 
