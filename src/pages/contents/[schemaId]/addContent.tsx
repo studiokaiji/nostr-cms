@@ -5,8 +5,12 @@ import { useTranslation } from "react-i18next";
 import "@mantine/tiptap/styles.css";
 
 import useSWR from "swr";
-import { useParams } from "react-router-dom";
-import { getContentsSchema, publishContent } from "@/services/content";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  ContentInput,
+  getContentsSchema,
+  publishContent,
+} from "@/services/content";
 import { ContentEditor } from "@/components/ContentEditor";
 
 export const AddContentPage = () => {
@@ -21,6 +25,17 @@ export const AddContentPage = () => {
 
   const { t } = useTranslation();
 
+  const navigate = useNavigate();
+
+  const publish = async (contentInput: ContentInput) => {
+    try {
+      await publishContent(contentInput);
+      navigate(`/contents/${schemaId}`);
+    } catch (e) {
+      alert(String(e));
+    }
+  };
+
   return (
     <Stack>
       <Stack>
@@ -29,7 +44,7 @@ export const AddContentPage = () => {
           <Title>{t("contents.addContent")}</Title>
         </Flex>
       </Stack>
-      {schema && <ContentEditor schema={schema} onPublish={publishContent} />}
+      {schema && <ContentEditor schema={schema} onPublish={publish} />}
     </Stack>
   );
 };
