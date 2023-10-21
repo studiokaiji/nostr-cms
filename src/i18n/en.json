@@ -17,5 +17,6 @@
     "publish": "Publish",
     "publishedAt": "Published At",
     "updatedAt": "Updated At"
-  }
+  },
+  "id": "ID"
 }

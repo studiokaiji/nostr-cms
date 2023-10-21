@@ -11,12 +11,15 @@ import {
   Box,
   Text,
 } from "@mantine/core";
+
 import { RichTextEditor, Link } from "@mantine/tiptap";
 import { useTranslation } from "react-i18next";
 import { Markdown } from "tiptap-markdown";
 import { useForm } from "@mantine/form";
 import { Content, ContentInput } from "@/services/content";
-import { useMemo } from "react";
+import { FormEvent } from "react";
+import { ImageDropzone } from "./ImageDropzone";
+import { readyNostr } from "nip07-awaiter";
 
 type ContentEditorProps = {
   schema: Schema;
@@ -24,58 +27,63 @@ type ContentEditorProps = {
   onPublish: (content: ContentInput) => void;
 };
 
-export const ContentEditor = ({ schema, content }: ContentEditorProps) => {
+export const ContentEditor = ({
+  schema,
+  content,
+  onPublish,
+}: ContentEditorProps) => {
   const { t } = useTranslation();
 
   const theme = useMantineTheme();
 
   const editor = useEditor({
     content: "",
-    extensions: [StarterKit, Link, Markdown],
+    extensions: [
+      StarterKit,
+      Link,
+      Markdown.configure({
+        html: false,
+      }),
+    ],
   });
 
-  const filteredFields = useMemo(
-    () => schema.fields.filter(({ userEditable }) => userEditable),
-    [schema]
+  const filteredFields = schema.fields.filter(
+    ({ userEditable }) => userEditable
   );
 
   const form = useForm({
     initialValues: {
-      fields: filteredFields.reduce<{ [key in string]: unknown }>(
+      id: content?.id || String(Date.now()),
+      fields: filteredFields.reduce<{ [key in string]: unknown[] }>(
         (prev, field) => {
-          let defaultValue: unknown;
+          let defaultValue: unknown[];
 
           if (content?.fields && field.key in content.fields) {
             defaultValue = content.fields[field.key];
           } else {
             switch (field.type.primitive) {
               case "text":
-                defaultValue = "";
+                defaultValue = [""];
                 break;
               case "boolean":
-                defaultValue = false;
+                defaultValue = [false];
                 break;
               case "date":
-                defaultValue = new Date();
+                defaultValue = [""];
                 break;
               case "image":
-                defaultValue = "";
+                defaultValue = [""];
                 break;
               case "number":
-                defaultValue = field.optional ? undefined : 0;
+                defaultValue = [0];
                 break;
               case "url":
-                defaultValue = "";
+                defaultValue = [""];
+                break;
+              default:
+                defaultValue = [];
+                break;
             }
-          }
-
-          if (field.type.unit === "array" && !Array.isArray(defaultValue)) {
-            defaultValue = [defaultValue];
-          } else if (
-            field.type.unit === "single" &&
-            Array.isArray(defaultValue)
-          ) {
-            defaultValue = defaultValue[0];
           }
 
           prev[field.key] = defaultValue;
@@ -86,46 +94,106 @@ export const ContentEditor = ({ schema, content }: ContentEditorProps) => {
     },
   });
 
-  return (
-    <form>
-      <Stack>
-        {filteredFields.map((field) => {
-          if (field.type.primitive === "boolean") {
-            return (
-              <Switch
-                label={field.label || field.key}
-                required={!field.optional}
-                {...form.getInputProps(`fields.${field.key}`)}
-              />
-            );
-          }
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    form.validate();
 
-          if (field.type.primitive === "image") {
+    const fields: { [key in string]: string[] } = {};
+
+    for (const key of Object.keys(form.values.fields)) {
+      fields[key] = form.values.fields[key].map((val) => String(val));
+    }
+
+    const nostr = await readyNostr;
+    const pubkey = await nostr.getPublicKey();
+
+    onPublish({
+      fields,
+      pubkey,
+      id: content?.id || form.values.id,
+      content: editor?.storage.markdown.getMarkdown() || "",
+      isDraft: false,
+      sites: [],
+    });
+  };
+
+  return (
+    <form onSubmit={submit}>
+      <Stack>
+        <TextInput
+          label={t("id")}
+          required
+          withAsterisk
+          style={{ maxWidth: "280px" }}
+          {...form.getInputProps(`id`)}
+          readOnly={!!content}
+        />
+
+        {filteredFields.map((field) => {
+          const fieldProps = form.getInputProps(`fields.${field.key}`);
+
+          if (!Array.isArray(fieldProps.value)) {
             return <></>;
           }
 
-          return (
-            <TextInput
-              label={field.label || field.key}
-              required={!field.optional}
-              withAsterisk={!field.optional}
-              size="md"
-              type={field.type.primitive}
-              style={{ maxWidth: "640px" }}
-              {...form.getInputProps(`fields.${field.key}`)}
-            />
-          );
+          if (field.type.primitive === "image") {
+            return (
+              <Box>
+                <Label>{field.label || field.key}</Label>
+                <ImageDropzone
+                  images={fieldProps.value}
+                  onChangeImages={fieldProps.onChange}
+                  multiple={field.type.unit === "array"}
+                />
+              </Box>
+            );
+          }
+
+          return fieldProps.value.map((_, i) => {
+            if (field.type.primitive === "boolean") {
+              return (
+                <Switch
+                  key={field.key}
+                  label={field.label || field.key}
+                  required={!field.optional}
+                  {...form.getInputProps(`fields.${field.key}.${i}`)}
+                />
+              );
+            }
+
+            if (
+              field.type.primitive === "date" ||
+              field.type.primitive === "time"
+            ) {
+              return (
+                <TextInput
+                  key={field.key}
+                  label={field.label || field.key}
+                  required={!field.optional}
+                  withAsterisk={!field.optional}
+                  style={{ maxWidth: "200px" }}
+                  type={field.type.primitive}
+                  {...form.getInputProps(`fields.${field.key}.${i}`)}
+                />
+              );
+            }
+
+            return (
+              <TextInput
+                key={field.key}
+                label={field.label || field.key}
+                required={!field.optional}
+                withAsterisk={!field.optional}
+                type={field.type.primitive}
+                style={{ maxWidth: "640px" }}
+                {...form.getInputProps(`fields.${field.key}.${i}`)}
+              />
+            );
+          });
         })}
         {schema.content !== "never" && (
           <Box>
-            <Text size="md" fw={500}>
-              Content{" "}
-              {schema.content === "required" && (
-                <Text span c="red" size="lg">
-                  *
-                </Text>
-              )}
-            </Text>
+            <Label required={schema.content === "required"}>Content</Label>
             <RichTextEditor
               editor={editor}
               styles={{
@@ -182,9 +250,28 @@ export const ContentEditor = ({ schema, content }: ContentEditorProps) => {
           </Box>
         )}
         <Flex gap="sm">
-          <Button>{t("contents.publish")}</Button>
+          <Button type="submit">{t("contents.publish")}</Button>
         </Flex>
       </Stack>
     </form>
+  );
+};
+
+const Label = ({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) => {
+  return (
+    <Text size="sm" fw={500}>
+      {children}{" "}
+      {required && (
+        <Text span c="red" size="lg">
+          *
+        </Text>
+      )}
+    </Text>
   );
 };
