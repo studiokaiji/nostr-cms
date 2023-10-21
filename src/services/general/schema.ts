@@ -150,6 +150,7 @@ const schemaRawValueType = z.object({
           z.literal("time"),
           z.literal("url"),
           z.literal("image"),
+          z.literal("updatedAt"),
         ]),
       }),
       userEditable: z.boolean().optional().default(true),
