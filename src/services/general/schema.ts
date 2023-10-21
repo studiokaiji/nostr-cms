@@ -134,29 +134,31 @@ export const parseSchema = (str: string, id: string, pubkey: string) => {
   return schema;
 };
 
+export type SchemaField = z.infer<typeof schemaRawValueFieldType>;
+
+const schemaRawValueFieldType = z.object({
+  key: z.string(),
+  label: z.string().optional(),
+  type: z.object({
+    unit: z.union([z.literal("single"), z.literal("array")]),
+    primitive: z.union([
+      z.literal("text"),
+      z.literal("number"),
+      z.literal("boolean"),
+      z.literal("date"),
+      z.literal("time"),
+      z.literal("url"),
+      z.literal("image"),
+      z.literal("updatedAt"),
+    ]),
+  }),
+  userEditable: z.boolean().optional().default(true),
+  optional: z.boolean().optional().default(false),
+});
+
 const schemaRawValueType = z.object({
   label: z.string(),
-  fields: z.array(
-    z.object({
-      key: z.string(),
-      label: z.string().optional(),
-      type: z.object({
-        unit: z.union([z.literal("single"), z.literal("array")]),
-        primitive: z.union([
-          z.literal("text"),
-          z.literal("number"),
-          z.literal("boolean"),
-          z.literal("date"),
-          z.literal("time"),
-          z.literal("url"),
-          z.literal("image"),
-          z.literal("updatedAt"),
-        ]),
-      }),
-      userEditable: z.boolean().optional().default(true),
-      optional: z.boolean().optional().default(false),
-    })
-  ),
+  fields: z.array(schemaRawValueFieldType),
   content: z
     .union([z.literal("required"), z.literal("optional"), z.literal("never")])
     .optional()
