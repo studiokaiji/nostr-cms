@@ -64,12 +64,6 @@ export const AppShellFrame = () => {
             />
           ))}
         </NavLink>
-
-        <NavLink
-          label={t("navigation.assets")}
-          disabled
-          style={{ fontWeight: 600 }}
-        ></NavLink>
       </AppShell.Navbar>
 
       <AppShell.Main style={{ width: "100%" }}>
