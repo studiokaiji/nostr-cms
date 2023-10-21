@@ -57,11 +57,11 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
               ];
               rowChildren.push(parsedData);
             } catch (e) {
+              rowChildren.push(<span />);
               console.error(e);
             }
-          }
-
-          if (
+            continue;
+          } else if (
             primitive === "text" ||
             primitive === "number" ||
             primitive === "boolean"
@@ -71,6 +71,7 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
             } else {
               rowChildren.push(data[0]);
             }
+            continue;
           } else {
             if (primitive === "image") {
               rowChildren.push(
@@ -97,6 +98,9 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
                   </Anchor>
                 );
               }
+              continue;
+            } else {
+              rowChildren.push(<span />);
             }
           }
         } catch (e) {
