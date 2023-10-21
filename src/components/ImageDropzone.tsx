@@ -71,7 +71,10 @@ export const ImageDropzone = ({
           }
         })()}
       </Dropzone>
-      <SimpleGrid cols={{ base: 1, sm: 4 }} mt={files.length > 0 ? "xl" : 0}>
+      <SimpleGrid
+        cols={{ base: 1, sm: 4 }}
+        mt={files.length > 0 && multiple ? "xl" : 0}
+      >
         {multiple &&
           files.map((file, index) => {
             const imageUrl = URL.createObjectURL(file);
