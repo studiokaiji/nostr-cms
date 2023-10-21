@@ -55,7 +55,7 @@ export const ARTICLES_SCHEMA: Schema = {
       label: "Published",
       type: {
         unit: "single",
-        primitive: "date",
+        primitive: "updatedAt",
       },
       userEditable: false,
       optional: false,
