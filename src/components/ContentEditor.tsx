@@ -1,4 +1,4 @@
-import { Schema } from "@/services/general/schema";
+import { Schema, SchemaField } from "@/services/general/schema";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -10,6 +10,7 @@ import {
   useMantineTheme,
   Box,
   Text,
+  ActionIcon,
 } from "@mantine/core";
 
 import { RichTextEditor, Link } from "@mantine/tiptap";
@@ -20,6 +21,7 @@ import { Content, ContentInput } from "@/services/content";
 import { FormEvent } from "react";
 import { ImageDropzone } from "./ImageDropzone";
 import { readyNostr } from "nip07-awaiter";
+import { IconX } from "@tabler/icons-react";
 
 type ContentEditorProps = {
   schema: Schema;
@@ -127,6 +129,14 @@ export const ContentEditor = ({
     });
   };
 
+  const addField = (field: SchemaField, index: number) => {
+    form.insertListItem(`fields.${field.key}`, "", index);
+  };
+
+  const removeField = (field: SchemaField, index: number) => {
+    form.removeListItem(`fields.${field.key}`, index);
+  };
+
   return (
     <form onSubmit={submit}>
       <Stack>
@@ -159,47 +169,71 @@ export const ContentEditor = ({
             );
           }
 
-          return fieldProps.value.map((_, i) => {
-            if (field.type.primitive === "boolean") {
-              return (
-                <Switch
-                  key={field.key}
-                  label={field.label || field.key}
-                  required={!field.optional}
-                  {...form.getInputProps(`fields.${field.key}.${i}`)}
-                />
-              );
-            }
-
-            if (
-              field.type.primitive === "date" ||
-              field.type.primitive === "time"
-            ) {
-              return (
-                <TextInput
-                  key={field.key}
-                  label={field.label || field.key}
-                  required={!field.optional}
-                  withAsterisk={!field.optional}
-                  style={{ maxWidth: "200px" }}
-                  type={field.type.primitive}
-                  {...form.getInputProps(`fields.${field.key}.${i}`)}
-                />
-              );
-            }
-
+          const fields = fieldProps.value.map((_, i) => {
             return (
-              <TextInput
-                key={field.key}
-                label={field.label || field.key}
-                required={!field.optional}
-                withAsterisk={!field.optional}
-                type={field.type.primitive}
-                style={{ maxWidth: "640px" }}
-                {...form.getInputProps(`fields.${field.key}.${i}`)}
-              />
+              <Flex style={{ width: "100%" }} align="center">
+                {field.type.primitive === "boolean" ? (
+                  <Switch
+                    key={field.key}
+                    required={!field.optional}
+                    {...form.getInputProps(`fields.${field.key}.${i}`)}
+                  />
+                ) : field.type.primitive === "date" ||
+                  field.type.primitive === "time" ? (
+                  <TextInput
+                    key={field.key}
+                    required={!field.optional}
+                    withAsterisk={!field.optional}
+                    style={{ maxWidth: "200px", width: "100%" }}
+                    type={field.type.primitive}
+                    {...form.getInputProps(`fields.${field.key}.${i}`)}
+                  />
+                ) : (
+                  <TextInput
+                    key={field.key}
+                    required={!field.optional}
+                    withAsterisk={!field.optional}
+                    type={field.type.primitive}
+                    style={{ maxWidth: "640px", width: "100%" }}
+                    {...form.getInputProps(`fields.${field.key}.${i}`)}
+                  />
+                )}
+                {field.type.unit === "array" && (
+                  <ActionIcon
+                    variant="transparent"
+                    onClick={() => removeField(field, i)}
+                  >
+                    <IconX size={20} color={theme.colors.gray[5]} />
+                  </ActionIcon>
+                )}
+              </Flex>
             );
           });
+
+          if (field.type.unit === "array") {
+            fields.push(
+              <Box>
+                <Button
+                  variant="default"
+                  style={{
+                    borderStyle: "dotted",
+                    borderWidth: 1.5,
+                    borderColor: theme.colors.gray[5],
+                  }}
+                  onClick={() => addField(field, fields.length)}
+                >
+                  + Add Field
+                </Button>
+              </Box>
+            );
+          }
+
+          return (
+            <Stack gap="xs">
+              <Label>{field.label || field.key}</Label>
+              {fields}
+            </Stack>
+          );
         })}
         {schema.content !== "never" && (
           <Box>
