@@ -6,26 +6,29 @@ import "@mantine/dropzone/styles.css";
 import { IconPhoto } from "@tabler/icons-react";
 
 type ImageDropzoneProps = {
-  defaultImage?: string;
-  files: FileWithPath[];
-  onChangeFiles: (files: FileWithPath[]) => void;
+  images: string[];
+  onChangeImages: (images: string[]) => void;
   multiple?: boolean;
   width?: number;
   height?: number;
 };
 
 export const ImageDropzone = ({
-  defaultImage,
-  files,
-  onChangeFiles,
+  images,
+  onChangeImages,
   multiple,
 }: ImageDropzoneProps) => {
   const theme = useMantineTheme();
 
+  const drop = (files: FileWithPath[]) => {
+    const images = files.map((file) => URL.createObjectURL(file));
+    onChangeImages(images);
+  };
+
   return (
     <Box>
       <Dropzone
-        onDrop={onChangeFiles}
+        onDrop={drop}
         accept={[
           "image/jpeg",
           "image/jpg",
@@ -51,8 +54,9 @@ export const ImageDropzone = ({
           <IconPhoto size={40} color={theme.colors.gray[5]} />
         </Flex>
         {(() => {
-          if (files.length > 0 && !multiple) {
-            const imageUrl = URL.createObjectURL(files[0]);
+          if (images.length > 0 && !multiple) {
+            const imageUrl = images[0];
+            if (!imageUrl) return <></>;
             return (
               <Image
                 style={{
@@ -64,8 +68,7 @@ export const ImageDropzone = ({
                   borderRadius: theme.radius.sm,
                 }}
                 fit="contain"
-                src={defaultImage || imageUrl}
-                onLoad={() => URL.revokeObjectURL(imageUrl)}
+                src={imageUrl}
               />
             );
           }
@@ -73,18 +76,11 @@ export const ImageDropzone = ({
       </Dropzone>
       <SimpleGrid
         cols={{ base: 1, sm: 4 }}
-        mt={files.length > 0 && multiple ? "xl" : 0}
+        mt={images.length > 0 && multiple ? "xl" : 0}
       >
         {multiple &&
-          files.map((file, index) => {
-            const imageUrl = URL.createObjectURL(file);
-            return (
-              <Image
-                key={index}
-                src={imageUrl}
-                onLoad={() => URL.revokeObjectURL(imageUrl)}
-              />
-            );
+          images.map((imageUrl, index) => {
+            return <Image key={index} src={imageUrl} />;
           })}
       </SimpleGrid>
     </Box>
