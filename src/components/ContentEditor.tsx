@@ -159,7 +159,9 @@ export const ContentEditor = ({
           if (field.type.primitive === "image") {
             return (
               <Box>
-                <Label>{field.label || field.key}</Label>
+                <Label required={!field.optional}>
+                  {field.label || field.key}
+                </Label>
                 <ImageDropzone
                   images={fieldProps.value}
                   onChangeImages={fieldProps.onChange}
@@ -230,7 +232,9 @@ export const ContentEditor = ({
 
           return (
             <Stack gap="xs">
-              <Label>{field.label || field.key}</Label>
+              <Label required={!field.optional}>
+                {field.label || field.key}
+              </Label>
               {fields}
             </Stack>
           );
