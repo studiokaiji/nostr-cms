@@ -72,7 +72,7 @@ export const addSchema = async (schema: Schema) => {
           fields: schema.fields,
           writeRule: schema.writeRule,
           type: schema.type,
-          content: schema.content
+          content: schema.content,
         }),
       ],
     ]
@@ -147,6 +147,7 @@ const schemaRawValueType = z.object({
           z.literal("number"),
           z.literal("boolean"),
           z.literal("date"),
+          z.literal("time"),
           z.literal("url"),
           z.literal("image"),
         ]),
