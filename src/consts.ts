@@ -51,8 +51,8 @@ export const ARTICLES_SCHEMA: Schema = {
       optional: true,
     },
     {
-      key: "published_at",
-      label: "Published",
+      key: "updated_at",
+      label: "Updated At",
       type: {
         unit: "single",
         primitive: "updatedAt",
