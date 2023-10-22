@@ -15,6 +15,7 @@ export const DEFAULT_CUSTOM_APP_DATA_RELAYS = ["ws://127.0.0.1:7002"];
 export const CLIENT = "noscms.pages.dev";
 export const RESERVED_CONTENT_TAGS = ["d", "s", "o"];
 export const RESERVED_SCHEMA_TAGS = ["d", "title", "t", "articles"];
+export const CREATED_AT_VARIABLE = 'VAR_CREATED_AT';
 export const ARTICLES_SCHEMA: Schema = {
   id: "articles",
   label: "Articles",

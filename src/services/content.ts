@@ -2,13 +2,15 @@ import { Filter, SimplePool } from "nostr-tools";
 import { getSchema, getSchemas } from "./general/schema";
 import { getBasicRelays } from "./relay";
 import { type Event, type UnsignedEvent } from "nostr-tools";
-import { ARTICLES_SCHEMA, CLIENT, RESERVED_CONTENT_TAGS } from "@/consts";
+import { ARTICLES_SCHEMA, CLIENT, CREATED_AT_VARIABLE, RESERVED_CONTENT_TAGS } from "@/consts";
 import { readyNostr } from "nip07-awaiter";
 
 const pool = new SimplePool();
 
 type ContentsQuery = {
   target?: "draft" | "published" | "all";
+  limit?: number;
+  lastEventTimestamp?: number;
 };
 
 export const getContents = async (
@@ -26,6 +28,8 @@ export const getContents = async (
           : query?.target === "draft"
           ? [30024]
           : [30023, 30024],
+      limit: query.limit || filter.limit,
+      since: query.lastEventTimestamp || 0,
     },
   ]);
 
@@ -97,6 +101,12 @@ export const nostrEventToContent = (event: Event): Content => {
     if (RESERVED_CONTENT_TAGS.includes(tag[0])) {
       continue;
     }
+
+    if (tag[1] === CREATED_AT_VARIABLE) {
+      fields[tag[0]] = [String(event.created_at)];
+      continue;
+    }
+
     fields[tag[0]] = tag.slice(1);
   }
 

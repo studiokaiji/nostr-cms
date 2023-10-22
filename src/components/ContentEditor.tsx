@@ -22,6 +22,7 @@ import { FormEvent } from "react";
 import { ImageDropzone } from "./ImageDropzone";
 import { readyNostr } from "nip07-awaiter";
 import { IconX } from "@tabler/icons-react";
+import { CREATED_AT_VARIABLE } from "@/consts";
 
 type ContentEditorProps = {
   schema: Schema;
@@ -108,7 +109,7 @@ export const ContentEditor = ({
 
     for (const field of schema.fields) {
       if (field.type.primitive === "updatedAt") {
-        fields[field.key] = [String(Math.floor(Date.now() / 1000))];
+        fields[field.key] = [CREATED_AT_VARIABLE];
       } else if (field.type.primitive === "date" && fields[field.key]?.[0]) {
         fields[field.key] = [
           String(Math.floor(new Date(fields[field.key][0]).getTime() / 1000)),
