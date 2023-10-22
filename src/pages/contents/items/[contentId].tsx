@@ -5,11 +5,27 @@ import {
   ContentInput,
   publishContent,
   getContent,
+  removeContent,
 } from "@/services/content";
-import { Stack, Flex, Title } from "@mantine/core";
+import {
+  Stack,
+  Flex,
+  Title,
+  Button,
+  Modal,
+  Text,
+  useMantineTheme,
+  Box,
+} from "@mantine/core";
 import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  IconAlertCircleFilled,
+  IconAlertHexagonFilled,
+  IconTrashX,
+} from "@tabler/icons-react";
+import { useDisclosure } from "@mantine/hooks";
 
 export const EditContentPage = () => {
   const { schemaId, contentId } = useParams();
@@ -43,15 +59,70 @@ export const EditContentPage = () => {
     }
   };
 
+  const remove = async () => {
+    try {
+      if (!content) return;
+      console.log(content.id);
+      await removeContent(content);
+      navigate(`/contents/${schemaId}`);
+    } catch (e) {
+      alert(String(e));
+    }
+  };
+
   return (
     <Stack>
-      <Flex align="center" gap="xs">
-        <BackButton />
-        <Title>{t("contents.editContent")}</Title>
+      <Flex align="center" justify="space-between">
+        <Flex align="center" gap="xs">
+          <BackButton />
+          <Title>{t("contents.editContent")}</Title>
+        </Flex>
+        <RemoveButton remove={remove} />
       </Flex>
       {schema && content && (
         <ContentEditor schema={schema} content={content} onPublish={publish} />
       )}
     </Stack>
+  );
+};
+
+const RemoveButton = ({ remove }: { remove: () => void }) => {
+  const { t } = useTranslation();
+
+  const [opened, { open, close }] = useDisclosure(false);
+
+  const theme = useMantineTheme();
+
+  return (
+    <>
+      <Modal opened={opened} onClose={close} centered withCloseButton={false}>
+        <Stack>
+          <Box>
+            <IconAlertHexagonFilled
+              style={{ color: theme.colors.red[7] }}
+              size={36}
+            />
+            <Title order={2}>{t("contents.removeConfirmation")}</Title>
+          </Box>
+          <Text>{t("contents.removeConfirmationMessage")}</Text>
+          <Flex gap="xs">
+            <Button color="gray" variant="light" onClick={close}>
+              {t("contents.cancel")}
+            </Button>
+            <Button color="red" onClick={remove}>
+              {t("contents.remove")}
+            </Button>
+          </Flex>
+        </Stack>
+      </Modal>
+      <Button
+        color="red"
+        variant="light"
+        leftSection={<IconTrashX size={18} />}
+        onClick={open}
+      >
+        {t("contents.remove")}
+      </Button>
+    </>
   );
 };

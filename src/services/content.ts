@@ -166,6 +166,24 @@ export const publishContent = async (contentInput: ContentInput) => {
   await Promise.allSettled(pool.publish(relays, signed));
 };
 
-export type WriteContentVariables = {
-  content: ContentInput;
+export const removeContent = async (content: Content) => {
+  const relays = getBasicRelays();
+  const nostr = await readyNostr;
+
+  const pubkey = await nostr.getPublicKey();
+
+  const event: UnsignedEvent = {
+    kind: 5,
+    content: "",
+    tags: [
+      ["e", content.event.id],
+      ["a", `30023:${pubkey}:${content.id}`],
+      ["a", `30024:${pubkey}:${content.id}`],
+    ],
+    pubkey,
+    created_at: Math.floor(Date.now() / 1000),
+  };
+  const signed = await nostr.signEvent(event);
+
+  await Promise.allSettled(pool.publish(relays, signed));
 };

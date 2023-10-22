@@ -18,7 +18,11 @@
     "publishedAt": "Published At",
     "updatedAt": "Updated At",
     "edit": "Edit",
-    "editContent": "Edit Content"
+    "editContent": "Edit Content",
+    "remove": "Remove",
+    "removeConfirmation": "Remove Confirmation",
+    "removeConfirmationMessage": "NostrCMS operates on a mechanism that distributes content across multiple relays. Therefore, unlike regular servers, data may not necessarily be deleted when removed.",
+    "cancel": "Cancel"
   },
   "id": "ID"
 }
