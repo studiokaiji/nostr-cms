@@ -1,7 +1,11 @@
-import { SimplePool } from "nostr-tools";
 import { getSchema, getSchemas } from "./general/schema";
 import { getBasicRelays } from "./relay";
-import { type Event, type UnsignedEvent } from "nostr-tools";
+import {
+  SimplePool,
+  Filter,
+  type Event,
+  type UnsignedEvent,
+} from "nostr-tools";
 import {
   ARTICLES_SCHEMA,
   CLIENT,
@@ -9,27 +13,22 @@ import {
   RESERVED_CONTENT_TAGS,
 } from "@/consts";
 import { readyNostr } from "nip07-awaiter";
-import { FetchFilter, NostrFetcher } from "nostr-fetch";
-import { simplePoolAdapter } from "@nostr-fetch/adapter-nostr-tools";
 
 const pool = new SimplePool();
-const fetcher = NostrFetcher.withCustomPool(simplePoolAdapter(pool));
 
 type ContentsQuery = {
   target?: "draft" | "published" | "all";
-  limit?: number;
-  lastEventTimestamp?: number;
 };
 
 export const getContents = async (
   query: ContentsQuery = {},
-  filter: FetchFilter
+  filter: Filter
 ) => {
   const relays = getBasicRelays();
 
-  const events = await fetcher.fetchAllEvents(
-    relays,
-    /* filter */
+  console.log("hi");
+
+  const events = await pool.list(relays, [
     {
       ...filter,
       kinds:
@@ -39,11 +38,9 @@ export const getContents = async (
           ? [30024]
           : [30023, 30024],
     },
-    /* time range filter */
-    { since: query.lastEventTimestamp || 0 },
-    /* fetch options (optional) */
-    { sort: true }
-  );
+  ]);
+
+  console.log(events);
 
   const contents = events
     .map(safeNostrEventToContent)
@@ -63,7 +60,7 @@ export const getContentsSchema = async (schemaId: string) => {
 export const getContent = async (contentId: string) => {
   const relays = getBasicRelays();
 
-  const event = await fetcher.fetchLastEvent(relays, {
+  const event = await pool.get(relays, {
     kinds: [30023, 30024],
     "#d": [contentId],
   });
@@ -198,11 +195,7 @@ export const removeContent = async (content: Content) => {
   const event: UnsignedEvent = {
     kind: 5,
     content: "",
-    tags: [
-      ["e", content.event.id],
-      ["a", `30023:${pubkey}:${content.id}`],
-      ["a", `30024:${pubkey}:${content.id}`],
-    ],
+    tags: [["e", content.event.id]],
     pubkey,
     created_at: Math.floor(Date.now() / 1000),
   };
