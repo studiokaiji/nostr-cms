@@ -1,8 +1,9 @@
 import { Content } from "@/services/content";
 import { Schema } from "@/services/general/schema";
-import { Anchor, Badge, Image, Table } from "@mantine/core";
+import { ActionIcon, Anchor, Badge, Image, Table } from "@mantine/core";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { IconEdit } from "@tabler/icons-react";
 
 type ContentsProps = {
   schema: Schema;
@@ -18,6 +19,7 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
     () => [
       t("contents.status"),
       ...schema.fields.map(({ label, key }) => label || key),
+      <span />,
     ],
     [t, schema.fields]
   );
@@ -48,7 +50,7 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
           const unit = field.type.unit;
           const primitive = field.type.primitive;
 
-          if (primitive === "date") {
+          if (primitive === "date" || primitive === "updatedAt") {
             try {
               const parsedData = [
                 new Date(Number(data[0]) * 1000).toLocaleDateString(
@@ -64,7 +66,8 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
           } else if (
             primitive === "text" ||
             primitive === "number" ||
-            primitive === "boolean"
+            primitive === "boolean" ||
+            primitive === "time"
           ) {
             if (unit === "array") {
               rowChildren.push(data.join(", "));
@@ -109,6 +112,17 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
         }
       }
 
+      rowChildren.push(
+        <ActionIcon
+          component="a"
+          href={`/contents/${schema.id}/items/${content.id}`}
+          variant="light"
+          size="lg"
+        >
+          <IconEdit size={20} />
+        </ActionIcon>
+      );
+
       returnRows.push(
         rowChildren.map((child, i) => (
           <Table.Td key={`table-td-${returnRows.length}.${i}`}>
@@ -119,14 +133,14 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
     }
 
     return returnRows;
-  }, [contents, i18n.language, schema.fields, t]);
+  }, [contents, i18n.language, schema.fields, schema.id, t]);
 
   return (
     <Table>
       <Table.Thead>
         <Table.Tr>
           {columns.map((column) => (
-            <Table.Th key={column}>{column}</Table.Th>
+            <Table.Th key={column.toString()}>{column}</Table.Th>
           ))}
         </Table.Tr>
       </Table.Thead>

@@ -16,7 +16,9 @@
     "addContent": "Add Content",
     "publish": "Publish",
     "publishedAt": "Published At",
-    "updatedAt": "Updated At"
+    "updatedAt": "Updated At",
+    "edit": "Edit",
+    "editContent": "Edit Content"
   },
   "id": "ID"
 }
