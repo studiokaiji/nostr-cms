@@ -21,7 +21,6 @@ import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  IconAlertCircleFilled,
   IconAlertHexagonFilled,
   IconTrashX,
 } from "@tabler/icons-react";
