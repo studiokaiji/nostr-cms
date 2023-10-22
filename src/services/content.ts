@@ -1,11 +1,19 @@
-import { Filter, SimplePool } from "nostr-tools";
+import { SimplePool } from "nostr-tools";
 import { getSchema, getSchemas } from "./general/schema";
 import { getBasicRelays } from "./relay";
 import { type Event, type UnsignedEvent } from "nostr-tools";
-import { ARTICLES_SCHEMA, CLIENT, CREATED_AT_VARIABLE, RESERVED_CONTENT_TAGS } from "@/consts";
+import {
+  ARTICLES_SCHEMA,
+  CLIENT,
+  CREATED_AT_VARIABLE,
+  RESERVED_CONTENT_TAGS,
+} from "@/consts";
 import { readyNostr } from "nip07-awaiter";
+import { FetchFilter, NostrFetcher } from "nostr-fetch";
+import { simplePoolAdapter } from "@nostr-fetch/adapter-nostr-tools";
 
 const pool = new SimplePool();
+const fetcher = NostrFetcher.withCustomPool(simplePoolAdapter(pool));
 
 type ContentsQuery = {
   target?: "draft" | "published" | "all";
@@ -15,11 +23,13 @@ type ContentsQuery = {
 
 export const getContents = async (
   query: ContentsQuery = {},
-  filter: Filter = {}
+  filter: FetchFilter
 ) => {
   const relays = getBasicRelays();
 
-  const events = await pool.list(relays, [
+  const events = await fetcher.fetchAllEvents(
+    relays,
+    /* filter */
     {
       ...filter,
       kinds:
@@ -28,10 +38,12 @@ export const getContents = async (
           : query?.target === "draft"
           ? [30024]
           : [30023, 30024],
-      limit: query.limit || filter.limit,
-      since: query.lastEventTimestamp || 0,
     },
-  ]);
+    /* time range filter */
+    { since: query.lastEventTimestamp || 0 },
+    /* fetch options (optional) */
+    { sort: true }
+  );
 
   const contents = events
     .map(safeNostrEventToContent)
@@ -51,10 +63,11 @@ export const getContentsSchema = async (schemaId: string) => {
 export const getContent = async (contentId: string) => {
   const relays = getBasicRelays();
 
-  const event = await pool.get(relays, {
+  const event = await fetcher.fetchLastEvent(relays, {
     kinds: [30023, 30024],
     "#d": [contentId],
   });
+
   if (!event) {
     return null;
   }

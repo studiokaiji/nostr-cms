@@ -568,6 +568,13 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@nostr-fetch/adapter-nostr-tools@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@nostr-fetch/adapter-nostr-tools/-/adapter-nostr-tools-0.13.0.tgz#9815ba7710bc452fa02f95e4d43e46a4ba4da05e"
+  integrity sha512-qAfSuGCrItzx21NadrttTEWBjhQcVRaOet8khjT4uFP+nd1zQR+VVo8HxMKwBUE/5pIKBcLKm2VnMeQg/C6SSQ==
+  dependencies:
+    "@nostr-fetch/kernel" "^0.13.0"
+
 "@nostr-fetch/kernel@^0.12.2":
   version "0.12.2"
   resolved "https://registry.yarnpkg.com/@nostr-fetch/kernel/-/kernel-0.12.2.tgz#f719f319ea7cca768232f99100e057399cf32349"
