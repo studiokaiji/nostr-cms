@@ -29,12 +29,17 @@ type ContentEditorProps = {
   schema: Schema;
   content?: Content | ContentInput;
   onPublish: (content: ContentInput) => void;
+  imageDropzone?: {
+    width?: number;
+    height?: number;
+  };
 };
 
 export const ContentEditor = ({
   schema,
   content,
   onPublish,
+  imageDropzone: imageDropzoneSettings,
 }: ContentEditorProps) => {
   const { t } = useTranslation();
 
@@ -184,6 +189,8 @@ export const ContentEditor = ({
                   images={fieldProps.value}
                   onChangeImages={fieldProps.onChange}
                   multiple={field.type.unit === "array"}
+                  width={imageDropzoneSettings?.width}
+                  height={imageDropzoneSettings?.height}
                 />
               </Box>
             );
