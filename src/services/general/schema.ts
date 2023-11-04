@@ -150,7 +150,18 @@ const schemaRawValueFieldType = z.object({
       z.literal("url"),
       z.literal("image"),
       z.literal("updatedAt"),
+      z.literal("selectText"),
+      z.literal("selectImageWithText"),
     ]),
+    selectable: z
+      .array(
+        z.object({
+          value: z.string(),
+          label: z.string().optional(),
+          image: z.string().optional(),
+        })
+      )
+      .optional(),
   }),
   userEditable: z.boolean().optional().default(true),
   optional: z.boolean().optional().default(false),

@@ -11,6 +11,7 @@ import {
   Box,
   Text,
   ActionIcon,
+  Select,
 } from "@mantine/core";
 
 import { RichTextEditor, Link } from "@mantine/tiptap";
@@ -90,6 +91,11 @@ export const ContentEditor = ({
                 break;
               case "url":
                 defaultValue = [""];
+                break;
+              case "selectText":
+                defaultValue = field.type.selectable?.[0]
+                  ? [field.type.selectable[0].value]
+                  : [];
                 break;
               default:
                 defaultValue = [];
@@ -215,6 +221,18 @@ export const ContentEditor = ({
                     required={!field.optional}
                     {...form.getInputProps(`fields.${field.key}.${i}`)}
                   />
+                ) : field.type.primitive === "selectText" ? (
+                  <Box>
+                    <Select
+                      key={field.key}
+                      required={!field.optional}
+                      data={field.type.selectable?.map(({ value, label }) => ({
+                        label: label || value,
+                        value: value,
+                      }))}
+                      style={{ display: "inline-block" }}
+                    />
+                  </Box>
                 ) : field.type.primitive === "date" ||
                   field.type.primitive === "time" ? (
                   <TextInput
@@ -266,12 +284,12 @@ export const ContentEditor = ({
           }
 
           return (
-            <Stack gap="xs">
+            <Box>
               <Label required={!field.optional}>
                 {field.label || field.key}
               </Label>
-              {fields}
-            </Stack>
+              <Stack gap="xs">{fields}</Stack>
+            </Box>
           );
         })}
         {schema.content !== "never" && (
@@ -348,7 +366,7 @@ const Label = ({
   required?: boolean;
 }) => {
   return (
-    <Text size="sm" fw={500}>
+    <Text size="sm" fw={500} lh={2}>
       {children}{" "}
       {required && (
         <Text span c="red" size="lg">
