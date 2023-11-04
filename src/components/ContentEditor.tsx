@@ -30,8 +30,10 @@ type ContentEditorProps = {
   content?: Content | ContentInput;
   onPublish: (content: ContentInput) => void;
   imageDropzone?: {
-    width?: number;
-    height?: number;
+    [field: string]: {
+      width?: number;
+      height?: number;
+    };
   };
 };
 
@@ -189,8 +191,16 @@ export const ContentEditor = ({
                   images={fieldProps.value}
                   onChangeImages={fieldProps.onChange}
                   multiple={field.type.unit === "array"}
-                  width={imageDropzoneSettings?.width}
-                  height={imageDropzoneSettings?.height}
+                  width={
+                    imageDropzoneSettings?.[field.key]
+                      ? imageDropzoneSettings[field.key]?.width
+                      : undefined
+                  }
+                  height={
+                    imageDropzoneSettings?.[field.key]
+                      ? imageDropzoneSettings[field.key]?.height
+                      : undefined
+                  }
                 />
               </Box>
             );
