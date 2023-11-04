@@ -17,6 +17,8 @@ export const ImageDropzone = ({
   images,
   onChangeImages,
   multiple,
+  width = 240,
+  height = 160,
 }: ImageDropzoneProps) => {
   const theme = useMantineTheme();
 
@@ -39,8 +41,8 @@ export const ImageDropzone = ({
         ]}
         styles={{
           root: {
-            width: 240,
-            height: 160,
+            width,
+            height,
             padding: 0,
           },
           inner: {
