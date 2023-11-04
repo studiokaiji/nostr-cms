@@ -23,6 +23,7 @@ import { ImageDropzone } from "./ImageDropzone";
 import { readyNostr } from "nip07-awaiter";
 import { IconX } from "@tabler/icons-react";
 import { CREATED_AT_VARIABLE } from "@/consts";
+import { uploadImage } from "@/services/image";
 
 type ContentEditorProps = {
   schema: Schema;
@@ -98,36 +99,52 @@ export const ContentEditor = ({
   });
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    form.validate();
+    try {
+      e.preventDefault();
+      form.validate();
 
-    const fields: { [key in string]: string[] } = {};
+      const fields: { [key in string]: string[] } = {};
 
-    for (const key of Object.keys(form.values.fields)) {
-      fields[key] = form.values.fields[key].map((val) => String(val));
-    }
-
-    for (const field of schema.fields) {
-      if (field.type.primitive === "updatedAt") {
-        fields[field.key] = [CREATED_AT_VARIABLE];
-      } else if (field.type.primitive === "date" && fields[field.key]?.[0]) {
-        fields[field.key] = [
-          String(Math.floor(new Date(fields[field.key][0]).getTime() / 1000)),
-        ];
+      for (const key of Object.keys(form.values.fields)) {
+        fields[key] = form.values.fields[key].map((val) => String(val));
       }
+
+      for (const field of schema.fields) {
+        if (field.type.primitive === "updatedAt") {
+          fields[field.key] = [CREATED_AT_VARIABLE];
+        } else if (
+          field.type.primitive === "date" &&
+          fields?.[field.key]?.[0]
+        ) {
+          fields[field.key] = [
+            String(Math.floor(new Date(fields[field.key][0]).getTime() / 1000)),
+          ];
+        } else if (
+          field.type.primitive === "image" &&
+          fields?.[field.key]?.[0]
+        ) {
+          const promises = Object.keys(fields[field.key]).map(async (_, i) => {
+            const url = await uploadImage(fields[field.key][i]);
+            fields[field.key] = [url];
+          });
+          await Promise.all(promises);
+        }
+      }
+
+      const nostr = await readyNostr;
+      const pubkey = await nostr.getPublicKey();
+
+      onPublish({
+        fields,
+        pubkey,
+        id: content?.id || form.values.id,
+        content: editor?.storage.markdown.getMarkdown() || "",
+        isDraft: false,
+        sites: [],
+      });
+    } catch (e) {
+      console.error("Failed to post: ", e);
     }
-
-    const nostr = await readyNostr;
-    const pubkey = await nostr.getPublicKey();
-
-    onPublish({
-      fields,
-      pubkey,
-      id: content?.id || form.values.id,
-      content: editor?.storage.markdown.getMarkdown() || "",
-      isDraft: false,
-      sites: [],
-    });
   };
 
   const addField = (field: SchemaField, index: number) => {
