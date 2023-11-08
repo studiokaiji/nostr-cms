@@ -26,8 +26,6 @@ export const getContents = async (
 ) => {
   const relays = getBasicRelays();
 
-  console.log("hi");
-
   const events = await pool.list(relays, [
     {
       ...filter,
@@ -39,8 +37,6 @@ export const getContents = async (
           : [30023, 30024],
     },
   ]);
-
-  console.log(events);
 
   const contents = events
     .map(safeNostrEventToContent)
@@ -73,7 +69,7 @@ export const getContent = async (contentId: string) => {
   return content;
 };
 
-export const getAllContentsSchemas = () => getSchemas([], ["o"]);
+export const getAllContentsSchemas = () => getSchemas([], ["h"]);
 
 export type ContentFields = { [key: string]: string[] };
 export type Content = {
@@ -90,7 +86,7 @@ export type Content = {
 export type ContentInput = Omit<Content, "event">;
 
 export const nostrEventToContent = (event: Event): Content => {
-  if (event.kind !== 30023 && event.kind === 30024) {
+  if (event.kind !== 30023 && event.kind !== 30024) {
     throw Error("Invalid event kind");
   }
 
@@ -100,7 +96,7 @@ export const nostrEventToContent = (event: Event): Content => {
   }
   const schemaId = event.tags.find((tags) => tags[0] === "s")?.[1] || undefined;
 
-  let sites = event.tags.find((tags) => tags[0] === "o")?.slice(1);
+  let sites = event.tags.find((tags) => tags[0] === "h")?.slice(1);
   if (!sites || sites.length < 1) {
     sites = ["*"];
   }
@@ -153,7 +149,7 @@ export const contentInputToNostrEvent = (
   }
 
   if (contentInput.sites) {
-    tags.push(["o", ...contentInput.sites]);
+    tags.push(["h", ...contentInput.sites]);
   }
 
   Object.entries(contentInput.fields).forEach(([key, value]) => {

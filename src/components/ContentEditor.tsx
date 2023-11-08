@@ -12,6 +12,11 @@ import {
   Text,
   ActionIcon,
   Select,
+  SimpleGrid,
+  CardSection,
+  Card,
+  Image,
+  Radio,
 } from "@mantine/core";
 
 import { RichTextEditor, Link } from "@mantine/tiptap";
@@ -93,6 +98,11 @@ export const ContentEditor = ({
                 defaultValue = [""];
                 break;
               case "selectText":
+                defaultValue = field.type.selectable?.[0]
+                  ? [field.type.selectable[0].value]
+                  : [];
+                break;
+              case "selectImageWithText":
                 defaultValue = field.type.selectable?.[0]
                   ? [field.type.selectable[0].value]
                   : [];
@@ -213,6 +223,10 @@ export const ContentEditor = ({
           }
 
           const fields = fieldProps.value.map((_, i) => {
+            console.log(field);
+            if (field.type.primitive === "selectImageWithText") {
+              console.log(field.type.selectable);
+            }
             return (
               <Flex style={{ width: "100%" }} align="center">
                 {field.type.primitive === "boolean" ? (
@@ -233,6 +247,50 @@ export const ContentEditor = ({
                       style={{ display: "inline-block" }}
                     />
                   </Box>
+                ) : field.type.primitive === "selectImageWithText" ? (
+                  <SimpleGrid
+                    cols={{ base: 1, sm: 2, lg: 5 }}
+                    spacing={{ base: "md" }}
+                  >
+                    {field.type.selectable?.map(({ value, label, image }) => (
+                      <Radio
+                        key={value}
+                        styles={{
+                          root: {
+                            position: "relative",
+                          },
+                          radio: {
+                            zIndex: 2,
+                            left: 16,
+                            top: 16,
+                          },
+                          label: {
+                            padding: 0,
+                          },
+                          inner: {
+                            position: "absolute",
+                            padding: 0,
+                          },
+                        }}
+                        label={
+                          <Card
+                            pos="relative"
+                            shadow="sm"
+                            padding="md"
+                            key={value}
+                            id={value}
+                          >
+                            <CardSection>
+                              <Image src={image} alt={label || value} h={160} />
+                            </CardSection>
+                            <Text fw={500} size="lg" mt="sm">
+                              {label || value}
+                            </Text>
+                          </Card>
+                        }
+                      />
+                    ))}
+                  </SimpleGrid>
                 ) : field.type.primitive === "date" ||
                   field.type.primitive === "time" ? (
                   <TextInput
@@ -267,7 +325,7 @@ export const ContentEditor = ({
 
           if (field.type.unit === "array") {
             fields.push(
-              <Box>
+              <Box key={`${field.key}-add-field`}>
                 <Button
                   variant="default"
                   style={{
@@ -284,7 +342,7 @@ export const ContentEditor = ({
           }
 
           return (
-            <Box>
+            <Box key={field.key}>
               <Label required={!field.optional}>
                 {field.label || field.key}
               </Label>

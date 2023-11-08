@@ -24,5 +24,8 @@
     "removeConfirmationMessage": "NostrCMS operates on a mechanism that distributes content across multiple relays. Therefore, unlike regular servers, data may not necessarily be deleted when removed.",
     "cancel": "Cancel"
   },
+  "sites": {
+    "createNewSite": "Create New Site"
+  },
   "id": "ID"
 }
