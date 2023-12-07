@@ -1,12 +1,7 @@
 import { SimplePool, type Event } from "nostr-tools";
-import { CLIENT, RESERVED_SCHEMA_TAGS } from "@/consts";
 import { getCustomAppDataRelays } from "../relay";
 import { readyNostr } from "nip07-awaiter";
-import { getTable, getSingle, upsertTableOrCreate } from "nostr-key-value";
 import { safeParseJson } from "@/utils/safeParseJson";
-import { z } from "zod";
-
-const TABLE_KEY = `${CLIENT}/schemas`;
 
 const pool = new SimplePool();
 
@@ -16,40 +11,116 @@ export const getSchemas = async (types?: string[], ignoreTypes?: string[]) => {
   const nostr = await readyNostr;
   const pubkey = await nostr.getPublicKey();
 
-  const table = await getTable(relays, pubkey, TABLE_KEY);
-  if (!table) {
-    return [];
-  }
+  const events = await pool.list(relays, [
+    {
+      kinds: [1064, 1065],
+      authors: [pubkey],
+      "#g": ["schema"],
+    },
+  ]);
 
-  let schemas = nostrEventToSchemas(table);
-  if (!schemas) {
-    return [];
-  }
+  const validEvents = events.filter(({ tags }) => {
+    const type = tags.find(([key]) => key === "type");
+    if (!type) {
+      return false;
+    }
 
-  if (types && types.length) {
-    schemas = schemas.filter((schema) => types.includes(schema.type));
-  }
+    if (ignoreTypes && ignoreTypes.includes(type[1])) {
+      return false;
+    }
 
-  if (ignoreTypes && ignoreTypes.length) {
-    schemas = schemas.filter((schema) => !ignoreTypes.includes(schema.type));
-  }
+    if (types) {
+      if (types.includes(type[1])) {
+        return true;
+      }
+      return false;
+    }
+
+    return true;
+  });
+
+  const schemas: Schema[] = [];
+  validEvents.forEach((ev) => {
+    try {
+      schemas.push(eventToSchema(ev));
+    } catch (e) {
+      e;
+    }
+  });
 
   return schemas;
 };
 
-export const getSchema = async (schemaId: string) => {
+export const getSchema = async (id: string): Promise<Schema | null> => {
   const relays = getCustomAppDataRelays();
 
-  const nostr = await readyNostr;
-  const pubkey = await nostr.getPublicKey();
+  const event = await pool.get(relays, {
+    ids: [id],
+    kinds: [1064, 1065],
+    "#g": ["schema"],
+  });
 
-  const strSchema = await getSingle(relays, pubkey, TABLE_KEY, schemaId);
-  if (!strSchema) {
-    throw Error("Schema doe not exist.");
+  if (!event) {
+    return null;
   }
 
-  const schema = parseSchema(strSchema, schemaId, pubkey);
-  return schema;
+  try {
+    return eventToSchema(event);
+  } catch (e) {
+    return null;
+  }
+};
+
+const eventToSchema = (event: Event) => {
+  const schema: Partial<Schema> = {};
+
+  event.tags.forEach((tag) => {
+    const [key, value] = tag;
+
+    if (key === "g" && value !== "schema") {
+      throw Error("Invalid Schema");
+    }
+
+    switch (key) {
+      case "type":
+        schema.type = value;
+        break;
+      case "label":
+        schema.label = value;
+        break;
+      case "write_rule":
+        isValidWriteRule(value)
+          ? (schema.write_rule = {
+              rule: value,
+              allow_list:
+                value === "allow_list" && tag.length > 2 ? tag.slice(2) : [],
+            })
+          : null;
+        break;
+      case "kinds":
+        schema.kinds = tag.slice(1).map((k) => parseInt(k));
+        break;
+      case "caption":
+        schema.caption = value;
+        break;
+    }
+  });
+
+  schema.type ??= "";
+  schema.label ??= "";
+  schema.write_rule ??= {
+    rule: "only_author",
+    allow_list: [],
+  };
+  schema.caption ??= "";
+
+  const parsed = safeParseJson(atob(event.content));
+  if (!isValidSchemaContent(parsed)) {
+    throw Error("Invalid Schema");
+  }
+  schema.schema = parsed;
+
+  return schema as Schema;
 };
 
 export const addSchema = async (schema: Schema) => {
@@ -58,129 +129,59 @@ export const addSchema = async (schema: Schema) => {
   const nostr = await readyNostr;
   const pubkey = await nostr.getPublicKey();
 
-  const tableEv = await upsertTableOrCreate(
-    relays,
-    pubkey,
-    TABLE_KEY,
-    "Nostr CMS Schema",
-    [],
+  const tags = [
+    ["type", schema.type],
+    ["label", schema.label],
     [
-      [
-        schema.id,
-        JSON.stringify({
-          label: schema.label,
-          fields: schema.fields,
-          writeRule: schema.writeRule,
-          type: schema.type,
-          content: schema.content,
-        }),
-      ],
-    ]
-  );
-  if (tableEv) {
-    const signed = await nostr.signEvent(tableEv);
-    pool.publish(relays, signed);
-  }
-};
-
-export type WriteRule = "onlyAuthor" | "allowList" | "all";
-
-export type Schema = {
-  id: string;
-} & z.infer<typeof schemaRawValueType>;
-
-export const nostrEventToSchemas = (event: Event) => {
-  const { tags: rawTags, pubkey } = event;
-
-  const tags = rawTags.filter(
-    (tags) => !RESERVED_SCHEMA_TAGS.includes(tags[0])
-  );
-
-  const schemas: Schema[] = [];
-
-  for (const tag of tags) {
-    const id = tag[0];
-    const rawValue = tag[1];
-
-    const parsed = schemaRawValueType.safeParse(safeParseJson(rawValue));
-    if (!parsed.success) {
-      return null;
-    }
-
-    const schema = {
-      id,
-      pubkey,
-      ...parsed.data,
-    };
-
-    schemas.push(schema);
-  }
-
-  return schemas;
-};
-
-export const parseSchema = (str: string, id: string, pubkey: string) => {
-  const parsed = schemaRawValueType.safeParse(safeParseJson(str));
-  if (!parsed.success) {
-    return null;
-  }
-
-  const schema = {
-    id,
+      "write_rule",
+      schema.write_rule.rule,
+      ...(schema.write_rule.allow_list || []),
+    ],
+    ["kinds", ...schema.kinds.map(String)],
+    ["caption", schema.caption || ""],
+    ["g", "schema"],
+  ];
+  const ev = {
+    tags,
     pubkey,
-    ...parsed.data,
+    content: btoa(JSON.stringify(schema.schema)),
+    kind: 1064,
+    created_at: Math.floor(Date.now() / 1000),
   };
 
-  return schema;
+  const signed = await nostr.signEvent(ev);
+
+  await Promise.allSettled(pool.publish(relays, signed));
 };
 
-export type SchemaField = z.infer<typeof schemaRawValueFieldType>;
+export type WriteRule = "only_author" | "allow_list" | "all";
 
-const schemaRawValueFieldType = z.object({
-  key: z.string(),
-  label: z.string().optional(),
-  type: z.object({
-    unit: z.union([z.literal("single"), z.literal("array")]),
-    primitive: z.union([
-      z.literal("text"),
-      z.literal("number"),
-      z.literal("boolean"),
-      z.literal("date"),
-      z.literal("time"),
-      z.literal("url"),
-      z.literal("image"),
-      z.literal("updatedAt"),
-      z.literal("selectText"),
-      z.literal("selectImageWithText"),
-    ]),
-    selectable: z
-      .array(
-        z.object({
-          value: z.string(),
-          label: z.string().optional(),
-          image: z.string().optional(),
-        })
-      )
-      .optional(),
-  }),
-  userEditable: z.boolean().optional().default(true),
-  optional: z.boolean().optional().default(false),
-});
+export type Schema = {
+  label: string;
+  kinds: number[];
+  write_rule: {
+    rule: WriteRule;
+    allow_list?: string[];
+  };
+  type: string;
+  caption: string;
+  schema: SchemaProperties;
+};
 
-const schemaRawValueType = z.object({
-  label: z.string(),
-  fields: z.array(schemaRawValueFieldType),
-  content: z
-    .union([z.literal("required"), z.literal("optional"), z.literal("never")])
-    .optional()
-    .default("optional"),
-  writeRule: z.object({
-    rule: z.union([
-      z.literal("onlyAuthor"),
-      z.literal("allowList"),
-      z.literal("all"),
-    ]),
-    pubkeys: z.array(z.string()).optional(),
-  }),
-  type: z.string(),
-});
+export type SchemaProperties = Record<string | number, unknown>;
+
+export type RawSchemaContent = {
+  type: "object";
+  properties: SchemaProperties;
+};
+
+const isValidWriteRule = (str: unknown): str is WriteRule => {
+  return str === "only_author" || str === "allow_list" || str === "all";
+};
+
+const isValidSchemaContent = (
+  schemaContent: unknown
+): schemaContent is RawSchemaContent => {
+  const c = schemaContent as RawSchemaContent;
+  return c?.type === "object" && !!c?.properties;
+};
