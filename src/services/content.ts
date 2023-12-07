@@ -1,4 +1,4 @@
-import { getSchema, getSchemas } from "./general/schema";
+import { getSchema, getSchemas, type SchemaProperties } from "./general/schema";
 import { getBasicRelays } from "./relay";
 import {
   SimplePool,
@@ -198,4 +198,81 @@ export const removeContent = async (content: Content) => {
   const signed = await nostr.signEvent(event);
 
   await Promise.allSettled(pool.publish(relays, signed));
+};
+
+export const autoPopulateDataFromSchema = (schema: SchemaProperties) => {
+  try {
+    const data: Record<string, unknown> = {};
+
+    const properties = schema.properties as Record<
+      string,
+      Record<string, unknown>
+    >;
+    if (!properties) return data;
+
+    const searchProperties = (
+      properties: Record<string, Record<string, unknown>>,
+      baseKey: string
+    ) => {
+      for (const key of Object.keys(properties)) {
+        const item = properties[key];
+
+        const inputMode = item.input_mode;
+
+        let value: any = "";
+
+        switch (inputMode) {
+          case "auto_populated_updated_at":
+            value = String(Math.floor(Date.now() / 1000));
+            break;
+          case "auto_populated_client":
+            value = CLIENT;
+        }
+
+        if (!value && !item.format) {
+          switch (item.type) {
+            case "array":
+              value = [];
+              break;
+            case "object":
+              value = {};
+              break;
+            case "string":
+              value = "";
+              break;
+            case "integer":
+              value = 0;
+              break;
+            case "boolean":
+              value = false;
+              break;
+            case "null":
+              value = null;
+              break;
+            default:
+              value = "";
+          }
+        } else if (!value) {
+          value = undefined;
+        }
+
+        const dataKey = `${baseKey ? `${baseKey}.` : ""}${key}`;
+        data[dataKey] = value;
+
+        if (item.properties) {
+          // ネストされたプロパティが存在する場合は再帰的に探索
+          searchProperties(
+            item.properties as Record<string, Record<string, unknown>>,
+            key
+          );
+        }
+      }
+    };
+
+    searchProperties(properties, "");
+
+    return data;
+  } catch (e) {
+    return {};
+  }
 };
