@@ -1,4 +1,9 @@
-import { getSchema, getSchemas, type SchemaProperties } from "./general/schema";
+import {
+  getSchema,
+  getSchemas,
+  Schema,
+  type SchemaProperties,
+} from "./general/schema";
 import { getBasicRelays } from "./relay";
 import {
   SimplePool,
@@ -223,7 +228,7 @@ export const autoPopulateDataFromSchema = (schema: SchemaProperties) => {
 
         switch (inputMode) {
           case "auto_populated_updated_at":
-            value = String(Math.floor(Date.now() / 1000));
+            value = Math.floor(Date.now() / 1000);
             break;
           case "auto_populated_client":
             value = CLIENT;
@@ -275,4 +280,36 @@ export const autoPopulateDataFromSchema = (schema: SchemaProperties) => {
   } catch (e) {
     return {};
   }
+};
+
+type ContentValue = {
+  [key in string]:
+    | string
+    | boolean
+    | number
+    | Record<string | number, ContentValue>
+    | Array<unknown>;
+};
+
+export const parseContentValue = (content: Content, schema: Schema) => {
+  const contentValue: ContentValue = {};
+
+  for (const [key, property] of Object.entries(schema.schema.properties)) {
+    const field = content.fields?.[key];
+    if (!field) {
+      continue;
+    }
+
+    if (property?.type !== "array" && property?.type !== "object") {
+      contentValue[key] = field[0];
+    } else {
+      contentValue[key] = field;
+    }
+  }
+
+  if (content.content) {
+    contentValue["content"] = content.content;
+  }
+
+  return contentValue;
 };
