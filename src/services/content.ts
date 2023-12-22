@@ -294,16 +294,30 @@ type ContentValue = {
 export const parseContentValue = (content: Content, schema: Schema) => {
   const contentValue: ContentValue = {};
 
-  for (const [key, property] of Object.entries(schema.schema.properties)) {
+  for (const [key, property] of Object.entries(
+    schema.schema.properties as Record<
+      string | number,
+      Record<string | number, unknown>
+    >
+  )) {
     const field = content.fields?.[key];
     if (!field) {
       continue;
     }
 
-    if (property?.type !== "array" && property?.type !== "object") {
-      contentValue[key] = field[0];
-    } else {
-      contentValue[key] = field;
+    switch (property?.type) {
+      case "array" || "object":
+        contentValue[key] = field[0];
+        break;
+      case "integer":
+        contentValue[key] = Number(field[0]);
+        break;
+      case "boolean":
+        contentValue[key] = field[0].toLowerCase() === "true";
+        break;
+      default:
+        contentValue[key] = field;
+        break;
     }
   }
 

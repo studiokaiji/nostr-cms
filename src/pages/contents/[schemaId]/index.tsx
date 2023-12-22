@@ -58,9 +58,9 @@ export const ContentSchemaPage = () => {
         { target },
         {
           authors:
-            schema.writeRule.rule === "allowList"
-              ? schema?.writeRule.pubkeys
-              : schema!.writeRule.rule === "onlyAuthor"
+            schema.write_rule.rule === "allow_list"
+              ? schema?.write_rule.allow_list
+              : schema!.write_rule.rule === "only_author"
               ? [pubkey]
               : undefined,
           "#s": schemaId === "articles" ? undefined : [schemaId],

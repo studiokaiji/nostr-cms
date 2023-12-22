@@ -1,0 +1,24 @@
+.array-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.array-item .btn-group {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.field:not(.array-item .field):not(.rjsf > .field) {
+  margin-bottom: 1rem;
+}
+
+.content-editor-add-button {
+  margin-top: 0.35rem;
+}

@@ -123,7 +123,7 @@ const eventToSchema = (event: Event) => {
   return schema as Schema;
 };
 
-export const addSchema = async (schema: Schema) => {
+export const addSchema = async (schema: Omit<Schema, "id">) => {
   const relays = getCustomAppDataRelays();
 
   const nostr = await readyNostr;
@@ -157,6 +157,7 @@ export const addSchema = async (schema: Schema) => {
 export type WriteRule = "only_author" | "allow_list" | "all";
 
 export type Schema = {
+  id: string;
   label: string;
   kinds: number[];
   write_rule: {
