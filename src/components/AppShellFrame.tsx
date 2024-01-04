@@ -1,10 +1,37 @@
-import { AppShell, Box, Card, NavLink } from "@mantine/core";
+import {
+  AppShell,
+  Box,
+  Card,
+  NavLinkProps,
+  NavLink as _NavLink,
+} from "@mantine/core";
 import { Link, Outlet } from "react-router-dom";
 import { LogoWithTextile } from "./LogoWithTextile";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
-import { useEffect } from "react";
+import { forwardRef, useEffect } from "react";
+
+const NavLink = forwardRef<
+  HTMLAnchorElement,
+  NavLinkProps & JSX.IntrinsicElements["a"]
+>((props, ref) => (
+  <_NavLink
+    {...props}
+    styles={{
+      root: {
+        borderRadius: "0.25rem",
+      },
+      children: {
+        paddingLeft: "0.75rem",
+      },
+      ...props?.styles,
+    }}
+    ref={ref}
+  >
+    {props.children}
+  </_NavLink>
+));
 
 export const AppShellFrame = () => {
   const { t } = useTranslation();
@@ -35,10 +62,11 @@ export const AppShellFrame = () => {
           navbar: {
             border: "none",
             background: "none",
+            paddingLeft: "1rem",
           },
         }}
       >
-        <Box p="md">
+        <Box pt="md" pb="sm">
           <Link to="/">
             <LogoWithTextile height={34} />
           </Link>
