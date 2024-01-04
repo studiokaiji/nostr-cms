@@ -30,6 +30,7 @@
     "@tiptap/starter-kit": "^2.1.12",
     "dayjs": "^1.11.10",
     "i18next": "^23.5.1",
+    "jotai": "^2.6.1",
     "nip07-awaiter": "^0.2.1",
     "nostr-fetch": "^0.13.0",
     "nostr-key-value": "^0.3.4",
