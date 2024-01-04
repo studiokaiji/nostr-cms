@@ -22,9 +22,6 @@ const NavLink = forwardRef<
       root: {
         borderRadius: "0.25rem",
       },
-      children: {
-        paddingLeft: "0.75rem",
-      },
       ...props?.styles,
     }}
     ref={ref}
