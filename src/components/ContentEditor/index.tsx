@@ -20,7 +20,7 @@ import {
   autoPopulateDataFromSchema,
   parseContentValue,
 } from "@/services/content";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ImageDropzone } from "@/components/ImageDropzone";
 import { uploadImage } from "@/services/image";
 
@@ -35,7 +35,11 @@ import {
   WidgetProps,
 } from "@rjsf/utils";
 
+import { atom, useAtom } from "jotai";
+
 import "./index.css";
+
+const isProcessingAtom = atom(false);
 
 type ContentEditorProps = {
   schemaId?: string;
@@ -52,25 +56,37 @@ export const ContentEditor = ({
   pubkey,
 }: ContentEditorProps) => {
   const { t } = useTranslation();
+
   const id = useMemo(() => content?.id || crypto.randomUUID(), [content]);
+
   const [sites, setSites] = useState<string[]>([]);
 
-  const submitHandler = (data: IChangeEvent) => {
-    const formData = data.formData;
-    const content = formData.content || "";
+  const [isProcessing, setIsProcessing] = useAtom(isProcessingAtom);
 
-    const input: ContentInput = {
-      id,
-      content,
-      pubkey,
-      sites,
-      isDraft: false,
-      schemaId,
-      fields: formData,
-    };
+  const submitHandler = useCallback(
+    (data: IChangeEvent) => {
+      setIsProcessing(true);
 
-    onPublish(input);
-  };
+      const formData = data.formData;
+      const content = formData.content || "";
+
+      const input: ContentInput = {
+        id,
+        content,
+        pubkey,
+        sites,
+        isDraft: false,
+        schemaId,
+        fields: formData,
+      };
+
+      console.log(input);
+
+      setIsProcessing(false);
+      onPublish(input);
+    },
+    [id, onPublish, pubkey, schemaId, setIsProcessing, sites]
+  );
 
   const formData = useMemo(() => {
     const populated = autoPopulateDataFromSchema(schema.schema);
@@ -82,9 +98,8 @@ export const ContentEditor = ({
     }
   }, [schema, content]);
 
-  return (
-    <>
-      <TextInput label="ID" value={id} readOnly disabled />
+  const formComponent = useMemo(
+    () => (
       <Form
         formData={formData}
         schema={schema.schema}
@@ -102,10 +117,21 @@ export const ContentEditor = ({
             onChange={setSites}
           />
           <div>
-            <Button type="submit">{t("contents.submit")}</Button>
+            <Button type="submit" disabled={isProcessing}>
+              {t("contents.submit")}
+            </Button>
           </div>
         </Stack>
       </Form>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formData, schema.schema, submitHandler, t]
+  );
+
+  return (
+    <>
+      <TextInput label="ID" value={id} readOnly disabled />
+      {formComponent}
     </>
   );
 };
@@ -378,16 +404,14 @@ const CustomURLWidget = ({
   required,
 }: WidgetProps) => {
   const [image, setImage] = useState(value || "");
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useAtom(isProcessingAtom);
 
   const selectImages = async (image: string) => {
     try {
       setImage(image);
       setIsUploading(true);
       const uploaded = await uploadImage(image);
-      onChange({
-        event: { currentTarget: { value: { uploaded } } },
-      });
+      onChange(uploaded);
     } catch (e) {
       alert(e);
       setImage("");
