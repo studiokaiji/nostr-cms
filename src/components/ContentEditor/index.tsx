@@ -20,7 +20,7 @@ import {
   autoPopulateDataFromSchema,
   parseContentValue,
 } from "@/services/content";
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ImageDropzone } from "@/components/ImageDropzone";
 import { uploadImage } from "@/services/image";
 
@@ -45,15 +45,13 @@ type ContentEditorProps = {
   schemaId?: string;
   schema: Schema;
   content?: Content | ContentInput;
-  onPublish: (content: ContentInput) => void;
-  pubkey: string;
+  onPublishRequest: (content: ContentInput) => void;
 };
 export const ContentEditor = ({
   schema,
   schemaId,
   content,
-  onPublish,
-  pubkey,
+  onPublishRequest,
 }: ContentEditorProps) => {
   const { t } = useTranslation();
 
@@ -63,30 +61,24 @@ export const ContentEditor = ({
 
   const [isProcessing, setIsProcessing] = useAtom(isProcessingAtom);
 
-  const submitHandler = useCallback(
-    (data: IChangeEvent) => {
-      setIsProcessing(true);
+  const submitHandler = (data: IChangeEvent) => {
+    setIsProcessing(true);
 
-      const formData = data.formData;
-      const content = formData.content || "";
+    const formData = data.formData;
+    const content = formData.content || "";
 
-      const input: ContentInput = {
-        id,
-        content,
-        pubkey,
-        sites,
-        isDraft: false,
-        schemaId,
-        fields: formData,
-      };
+    const input = {
+      id,
+      content,
+      sites,
+      isDraft: false,
+      schemaId,
+      fields: formData,
+    };
 
-      console.log(input);
-
-      setIsProcessing(false);
-      onPublish(input);
-    },
-    [id, onPublish, pubkey, schemaId, setIsProcessing, sites]
-  );
+    setIsProcessing(false);
+    onPublishRequest(input);
+  };
 
   const formData = useMemo(() => {
     const populated = autoPopulateDataFromSchema(schema.schema);
@@ -431,7 +423,9 @@ const CustomURLWidget = ({
       <Box className="relative">
         <Label required={required}>{label}</Label>
         <ImageDropzone
-          onChangeImages={(images) => selectImages(images[0])}
+          onChangeImages={(images) =>
+            images[0] ? selectImages(images[0]) : null
+          }
           images={[image]}
           width={width}
           height={height}

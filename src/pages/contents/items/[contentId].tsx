@@ -75,7 +75,11 @@ export const EditContentPage = () => {
         <RemoveButton remove={remove} />
       </Flex>
       {schema && content && (
-        <ContentEditor schema={schema} content={content} onPublish={publish} />
+        <ContentEditor
+          schema={schema}
+          content={content}
+          onPublishRequest={publish}
+        />
       )}
     </Stack>
   );

@@ -88,7 +88,7 @@ export type Content = {
   sites: string[];
 };
 
-export type ContentInput = Omit<Content, "event">;
+export type ContentInput = Omit<Content, "event" | "pubkey">;
 
 export const nostrEventToContent = (event: Event): Content => {
   if (event.kind !== 30023 && event.kind !== 30024) {
@@ -142,7 +142,8 @@ export const safeNostrEventToContent = (event: Event): Content | null => {
 };
 
 export const contentInputToNostrEvent = (
-  contentInput: ContentInput
+  contentInput: ContentInput,
+  pubkey: string
 ): UnsignedEvent => {
   const tags: string[][] = [];
 
@@ -162,6 +163,8 @@ export const contentInputToNostrEvent = (
     let tagValue: string;
     if (typeof value === "boolean") {
       tagValue = value ? "true" : "false";
+    } else if (typeof value === "undefined" || value === null) {
+      tagValue = "";
     } else {
       tagValue = String(value);
     }
@@ -173,7 +176,7 @@ export const contentInputToNostrEvent = (
     tags,
     content: contentInput.content,
     created_at: Math.floor(Date.now() / 1000),
-    pubkey: contentInput.pubkey,
+    pubkey,
   };
 };
 
@@ -181,7 +184,9 @@ export const publishContent = async (contentInput: ContentInput) => {
   const relays = getBasicRelays();
   const nostr = await readyNostr;
 
-  const event = contentInputToNostrEvent(contentInput);
+  const pubkey = await nostr.getPublicKey();
+
+  const event = contentInputToNostrEvent(contentInput, pubkey);
   const signed = await nostr.signEvent(event);
 
   await Promise.allSettled(pool.publish(relays, signed));
@@ -224,7 +229,7 @@ export const autoPopulateDataFromSchema = (schema: SchemaProperties) => {
 
         const inputMode = item.input_mode;
 
-        let value: any = "";
+        let value: string | number | boolean | object | null | undefined = "";
 
         switch (inputMode) {
           case "auto_populated_updated_at":

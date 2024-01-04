@@ -12,10 +12,6 @@ import {
   publishContent,
 } from "@/services/content";
 import { ContentEditor } from "@/components/ContentEditor";
-import { readyNostr } from "nip07-awaiter";
-
-const nostr = await readyNostr;
-const pubkey = await nostr.getPublicKey();
 
 export const AddContentPage = () => {
   const { schemaId } = useParams();
@@ -48,9 +44,7 @@ export const AddContentPage = () => {
           <Title>{t("contents.addContent")}</Title>
         </Flex>
       </Stack>
-      {schema && (
-        <ContentEditor schema={schema} onPublish={publish} pubkey={pubkey} />
-      )}
+      {schema && <ContentEditor schema={schema} onPublishRequest={publish} />}
     </Stack>
   );
 };
