@@ -20,10 +20,7 @@ import {
 import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  IconAlertHexagonFilled,
-  IconTrashX,
-} from "@tabler/icons-react";
+import { IconAlertHexagonFilled, IconTrashX } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
 
 export const EditContentPage = () => {
@@ -61,7 +58,6 @@ export const EditContentPage = () => {
   const remove = async () => {
     try {
       if (!content) return;
-      console.log(content.id);
       await removeContent(content);
       navigate(`/contents/${schemaId}`);
     } catch (e) {
