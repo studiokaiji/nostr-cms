@@ -2,6 +2,7 @@ import { Content } from "@/services/content";
 import { Schema } from "@/services/general/schema";
 import { ActionIcon, Anchor, Badge, Image, Table } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
+import { t } from "i18next";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -68,11 +69,12 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
           );
         } else if (
           dataSchema.type === "integer" &&
-          dataSchema.format === "timestamp"
+          dataSchema.input_mode === "auto_populated_updated_at"
         ) {
           const parsedData = [
             new Date(Number(data[0]) * 1000).toLocaleDateString(i18n.language),
           ];
+          console.log(parsedData);
           rowChildren.push(parsedData);
         } else {
           const isOverflowed = data[0].length > 80;
