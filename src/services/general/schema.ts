@@ -13,9 +13,8 @@ export const getSchemas = async (types?: string[], ignoreTypes?: string[]) => {
 
   const events = await pool.list(relays, [
     {
-      kinds: [1064, 1065],
+      kinds: [30113],
       authors: [pubkey],
-      "#g": ["schema"],
     },
   ]);
 
@@ -56,8 +55,7 @@ export const getSchema = async (id: string): Promise<Schema | null> => {
 
   const event = await pool.get(relays, {
     ids: [id],
-    kinds: [1064, 1065],
-    "#g": ["schema"],
+    kinds: [30113],
   });
 
   if (!event) {
@@ -76,10 +74,6 @@ const eventToSchema = (event: Event) => {
 
   event.tags.forEach((tag) => {
     const [key, value] = tag;
-
-    if (key === "g" && value !== "schema") {
-      throw Error("Invalid Schema");
-    }
 
     switch (key) {
       case "type":
@@ -137,15 +131,14 @@ export const addSchema = async (schema: Omit<Schema, "id">) => {
       schema.write_rule.rule,
       ...(schema.write_rule.allow_list || []),
     ],
-    ["kinds", ...schema.kinds.map(String)],
+    ["k", ...schema.kinds.map(String)],
     ["caption", schema.caption || ""],
-    ["g", "schema"],
   ];
   const ev = {
     tags,
     pubkey,
     content: btoa(JSON.stringify(schema.schema)),
-    kind: 1064,
+    kind: 30113,
     created_at: Math.floor(Date.now() / 1000),
   };
 
