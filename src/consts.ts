@@ -42,7 +42,6 @@ export const ARTICLES_SCHEMA: Schema = {
       },
       updated_at: {
         type: "integer",
-        format: "timestamp",
         title: "Updated At",
         input_mode: "auto_populated_updated_at",
       },
@@ -67,6 +66,25 @@ export const SITE_SCHEMA: Schema = {
   id: "site",
   label: "Site",
   type: "site",
+  schema: {
+    title: {
+      type: "string",
+      title: "Title",
+    },
+    description: {
+      type: "string",
+      title: "Description",
+    },
+    icon: {
+      type: "string",
+      title: "Icon",
+      description: "Website favicon",
+    },
+    published: {
+      type: "boolean",
+      title: "Publish",
+    },
+  },
   fields: [
     {
       key: "title",
