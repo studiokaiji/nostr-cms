@@ -74,7 +74,6 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
           const parsedData = [
             new Date(Number(data[0]) * 1000).toLocaleDateString(i18n.language),
           ];
-          console.log(parsedData);
           rowChildren.push(parsedData);
         } else {
           const isOverflowed = data[0].length > 80;
