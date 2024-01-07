@@ -96,7 +96,9 @@ export const AppShellFrame = () => {
           radius="xl"
           p="xl"
           style={{
-            minHeight: "calc(100dvh - 2rem)",
+            height: "calc(100dvh - 2rem)",
+            overflowX: "scroll",
+            overflowY: "scroll",
           }}
         >
           <Outlet />
