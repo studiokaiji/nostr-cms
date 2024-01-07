@@ -13,7 +13,7 @@ export const getSchemas = async (types?: string[], ignoreTypes?: string[]) => {
 
   const events = await pool.list(relays, [
     {
-      kinds: [30113],
+      kinds: [9113],
       authors: [pubkey],
     },
   ]);
@@ -55,7 +55,7 @@ export const getSchema = async (id: string): Promise<Schema | null> => {
 
   const event = await pool.get(relays, {
     ids: [id],
-    kinds: [30113],
+    kinds: [9113],
   });
 
   if (!event) {
@@ -138,7 +138,7 @@ export const addSchema = async (schema: Omit<Schema, "id">) => {
     tags,
     pubkey,
     content: btoa(JSON.stringify(schema.schema)),
-    kind: 30113,
+    kind: 9113,
     created_at: Math.floor(Date.now() / 1000),
   };
 
