@@ -78,6 +78,7 @@ export const EditContentPage = () => {
         <ContentEditor
           schema={schema}
           content={content}
+          type="content"
           onPublishRequest={publish}
         />
       )}

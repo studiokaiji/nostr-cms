@@ -46,12 +46,14 @@ type ContentEditorProps = {
   schema: Schema;
   content?: Content | ContentInput;
   onPublishRequest: (content: ContentInput) => void;
+  type: "content" | "site";
 };
 export const ContentEditor = ({
   schema,
   schemaId,
   content,
   onPublishRequest,
+  type,
 }: ContentEditorProps) => {
   const { t } = useTranslation();
 
@@ -102,12 +104,14 @@ export const ContentEditor = ({
         onSubmit={submitHandler}
       >
         <Stack align="flex-start">
-          <MultiSelect
-            label={t("contents.sites")}
-            data={["A", "B", "C"]}
-            description={t("contents.sitesDescription")}
-            onChange={setSites}
-          />
+          {type === "content" && (
+            <MultiSelect
+              label={t("contents.sites")}
+              data={["A", "B", "C"]}
+              description={t("contents.sitesDescription")}
+              onChange={setSites}
+            />
+          )}
           <div>
             <Button type="submit" disabled={isProcessing}>
               {t("contents.submit")}
@@ -395,7 +399,7 @@ const CustomURLWidget = ({
   label,
   required,
 }: WidgetProps) => {
-  const [image, setImage] = useState(value || "");
+  const [image, setImage] = useState(value?.[0] || "");
   const [isUploading, setIsUploading] = useAtom(isProcessingAtom);
 
   const selectImages = async (image: string) => {
