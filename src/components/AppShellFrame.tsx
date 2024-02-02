@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
 import { forwardRef, useEffect } from "react";
+import "./AppShellFrame.module.css";
 
 const NavLink = forwardRef<
   HTMLAnchorElement,
@@ -19,12 +20,11 @@ const NavLink = forwardRef<
   <_NavLink
     {...props}
     styles={{
-      root: {
-        borderRadius: "0.25rem",
-      },
+      root: {},
       ...props?.styles,
     }}
     ref={ref}
+    px="md"
   >
     {props.children}
   </_NavLink>
@@ -51,19 +51,22 @@ export const AppShellFrame = () => {
 
   return (
     <AppShell
-      navbar={{ width: 240, breakpoint: "sm", collapsed: { mobile: false } }}
-      padding="md"
+      navbar={{
+        width: 240,
+        breakpoint: "sm",
+        collapsed: { mobile: false },
+      }}
     >
       <AppShell.Navbar
         styles={{
           navbar: {
             border: "none",
             background: "none",
-            paddingLeft: "1rem",
+            paddingRight: 0,
           },
         }}
       >
-        <Box pt="md" pb="sm">
+        <Box p="md">
           <Link to="/">
             <Logo width={36} height={36} />
           </Link>
@@ -91,17 +94,23 @@ export const AppShellFrame = () => {
         </NavLink>
       </AppShell.Navbar>
 
-      <AppShell.Main style={{ width: "100%" }}>
+      <AppShell.Main style={{ width: "100%" }} pt="md" pr="md">
         <Card
           radius="xl"
-          p="xl"
+          p={0}
           style={{
             height: "calc(100dvh - 2rem)",
-            overflowX: "scroll",
-            overflowY: "scroll",
           }}
         >
-          <Outlet />
+          <Box
+            p="xl"
+            style={{
+              overflowX: "scroll",
+              overflowY: "scroll",
+            }}
+          >
+            <Outlet />
+          </Box>
         </Card>
       </AppShell.Main>
     </AppShell>
