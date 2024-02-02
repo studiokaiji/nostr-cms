@@ -6,7 +6,7 @@ import {
   NavLink as _NavLink,
 } from "@mantine/core";
 import { Link, Outlet } from "react-router-dom";
-import { LogoWithTextile } from "./LogoWithTextile";
+import { Logo } from "./Logo";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
@@ -65,7 +65,7 @@ export const AppShellFrame = () => {
       >
         <Box pt="md" pb="sm">
           <Link to="/">
-            <LogoWithTextile height={34} />
+            <Logo width={36} height={36} />
           </Link>
         </Box>
         <NavLink
