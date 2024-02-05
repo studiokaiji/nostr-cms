@@ -6,12 +6,12 @@ import {
   NavLink as _NavLink,
 } from "@mantine/core";
 import { Link, Outlet } from "react-router-dom";
-import { Logo } from "./Logo";
+import { Logo } from "../Logo";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
 import { forwardRef, useEffect } from "react";
-import "./AppShellFrame.module.css";
+import "./index.module.css";
 
 const NavLink = forwardRef<
   HTMLAnchorElement,
