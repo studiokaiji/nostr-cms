@@ -44,13 +44,7 @@ export const AddContentPage = () => {
           <Title>{t("contents.addContent")}</Title>
         </Flex>
       </Stack>
-      {schema && (
-        <ContentEditor
-          type="content"
-          schema={schema}
-          onPublishRequest={publish}
-        />
-      )}
+      {schema && <ContentEditor schema={schema} onPublishRequest={publish} />}
     </Stack>
   );
 };

@@ -9,7 +9,6 @@ import {
   Checkbox,
   PasswordInput,
   Textarea,
-  MultiSelect,
   Stack,
 } from "@mantine/core";
 
@@ -46,20 +45,16 @@ type ContentEditorProps = {
   schema: Schema;
   content?: Content | ContentInput;
   onPublishRequest: (content: ContentInput) => void;
-  type: "content" | "site";
 };
 export const ContentEditor = ({
   schema,
   schemaId,
   content,
   onPublishRequest,
-  type,
 }: ContentEditorProps) => {
   const { t } = useTranslation();
 
   const id = useMemo(() => content?.id || crypto.randomUUID(), [content]);
-
-  const [sites, setSites] = useState<string[]>([]);
 
   const [isProcessing, setIsProcessing] = useAtom(isProcessingAtom);
 
@@ -72,7 +67,6 @@ export const ContentEditor = ({
     const input = {
       id,
       content,
-      sites,
       isDraft: false,
       schemaId,
       fields: formData,
@@ -104,14 +98,6 @@ export const ContentEditor = ({
         onSubmit={submitHandler}
       >
         <Stack align="flex-start">
-          {type === "content" && (
-            <MultiSelect
-              label={t("contents.sites")}
-              data={["A", "B", "C"]}
-              description={t("contents.sitesDescription")}
-              onChange={setSites}
-            />
-          )}
           <div>
             <Button type="submit" disabled={isProcessing}>
               {t("contents.submit")}

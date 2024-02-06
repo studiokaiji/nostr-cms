@@ -83,8 +83,6 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
         }
       }
 
-      rowChildren.push(<div>{content.sites.join(",")}</div>);
-
       rowChildren.push(
         <ActionIcon
           component="a"
@@ -117,7 +115,6 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
             ...filteredSchemaList.map(
               ([key, p]) => p?.title || p?.label || key
             ),
-            t("contents.sites"),
             "",
           ].map((column) => (
             <Table.Th

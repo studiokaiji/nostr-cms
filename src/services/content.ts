@@ -85,7 +85,6 @@ export type Content = {
   event: Event;
   pubkey: string;
   schemaId?: string;
-  sites: string[];
 };
 
 export type ContentInput = Omit<Content, "event" | "pubkey">;
@@ -100,11 +99,6 @@ export const nostrEventToContent = (event: Event): Content => {
     throw Error("Content id(d tag) is not found");
   }
   const schemaId = event.tags.find((tags) => tags[0] === "s")?.[1] || undefined;
-
-  let sites = event.tags.find((tags) => tags[0] === "h")?.slice(1);
-  if (!sites || sites.length < 1) {
-    sites = ["*"];
-  }
 
   const fields: ContentFields = {};
 
@@ -129,7 +123,6 @@ export const nostrEventToContent = (event: Event): Content => {
     event,
     pubkey: event.pubkey,
     schemaId,
-    sites,
   };
 };
 
@@ -152,10 +145,6 @@ export const contentInputToNostrEvent = (
 
   if (contentInput.schemaId) {
     tags.push(["s", contentInput.schemaId]);
-  }
-
-  if (contentInput.sites) {
-    tags.push(["h", ...contentInput.sites]);
   }
 
   Object.entries(contentInput.fields).forEach(([key, value]) => {

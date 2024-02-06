@@ -1,6 +1,5 @@
 {
   "navigation": {
-    "sites": "Sites",
     "contents": "Contents",
     "articles": "Articles",
     "assets": "Assets"
@@ -24,12 +23,7 @@
     "removeConfirmationMessage": "NostrCMS operates on a mechanism that distributes content across multiple relays. Therefore, unlike regular servers, data may not necessarily be deleted when removed.",
     "cancel": "Cancel",
     "add": "Add",
-    "submit": "Submit",
-    "sites": "Sites",
-    "sitesDescription": "If you do not select anything, all sites will be able to read this content."
-  },
-  "sites": {
-    "createNewSite": "Create New Site"
+    "submit": "Submit"
   },
   "id": "ID"
 }
