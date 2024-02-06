@@ -1,4 +1,9 @@
-import { getSchema, getSchemas } from "./general/schema";
+import {
+  getSchema,
+  getSchemas,
+  Schema,
+  type SchemaProperties,
+} from "./general/schema";
 import { getBasicRelays } from "./relay";
 import {
   SimplePool,
@@ -26,8 +31,6 @@ export const getContents = async (
 ) => {
   const relays = getBasicRelays();
 
-  console.log("hi");
-
   const events = await pool.list(relays, [
     {
       ...filter,
@@ -39,8 +42,6 @@ export const getContents = async (
           : [30023, 30024],
     },
   ]);
-
-  console.log(events);
 
   const contents = events
     .map(safeNostrEventToContent)
@@ -73,7 +74,7 @@ export const getContent = async (contentId: string) => {
   return content;
 };
 
-export const getAllContentsSchemas = () => getSchemas([], ["o"]);
+export const getAllContentsSchemas = () => getSchemas([], ["h"]);
 
 export type ContentFields = { [key: string]: string[] };
 export type Content = {
@@ -87,10 +88,10 @@ export type Content = {
   sites: string[];
 };
 
-export type ContentInput = Omit<Content, "event">;
+export type ContentInput = Omit<Content, "event" | "pubkey">;
 
 export const nostrEventToContent = (event: Event): Content => {
-  if (event.kind !== 30023 && event.kind === 30024) {
+  if (event.kind !== 30023 && event.kind !== 30024) {
     throw Error("Invalid event kind");
   }
 
@@ -100,7 +101,7 @@ export const nostrEventToContent = (event: Event): Content => {
   }
   const schemaId = event.tags.find((tags) => tags[0] === "s")?.[1] || undefined;
 
-  let sites = event.tags.find((tags) => tags[0] === "o")?.slice(1);
+  let sites = event.tags.find((tags) => tags[0] === "h")?.slice(1);
   if (!sites || sites.length < 1) {
     sites = ["*"];
   }
@@ -141,7 +142,8 @@ export const safeNostrEventToContent = (event: Event): Content | null => {
 };
 
 export const contentInputToNostrEvent = (
-  contentInput: ContentInput
+  contentInput: ContentInput,
+  pubkey: string
 ): UnsignedEvent => {
   const tags: string[][] = [];
 
@@ -153,7 +155,7 @@ export const contentInputToNostrEvent = (
   }
 
   if (contentInput.sites) {
-    tags.push(["o", ...contentInput.sites]);
+    tags.push(["h", ...contentInput.sites]);
   }
 
   Object.entries(contentInput.fields).forEach(([key, value]) => {
@@ -161,6 +163,8 @@ export const contentInputToNostrEvent = (
     let tagValue: string;
     if (typeof value === "boolean") {
       tagValue = value ? "true" : "false";
+    } else if (typeof value === "undefined" || value === null) {
+      tagValue = "";
     } else {
       tagValue = String(value);
     }
@@ -172,7 +176,7 @@ export const contentInputToNostrEvent = (
     tags,
     content: contentInput.content,
     created_at: Math.floor(Date.now() / 1000),
-    pubkey: contentInput.pubkey,
+    pubkey,
   };
 };
 
@@ -180,7 +184,9 @@ export const publishContent = async (contentInput: ContentInput) => {
   const relays = getBasicRelays();
   const nostr = await readyNostr;
 
-  const event = contentInputToNostrEvent(contentInput);
+  const pubkey = await nostr.getPublicKey();
+
+  const event = contentInputToNostrEvent(contentInput, pubkey);
   const signed = await nostr.signEvent(event);
 
   await Promise.allSettled(pool.publish(relays, signed));
@@ -202,4 +208,127 @@ export const removeContent = async (content: Content) => {
   const signed = await nostr.signEvent(event);
 
   await Promise.allSettled(pool.publish(relays, signed));
+};
+
+export const autoPopulateDataFromSchema = (schema: SchemaProperties) => {
+  try {
+    const data: Record<string, unknown> = {};
+
+    const properties = schema.properties as Record<
+      string,
+      Record<string, unknown>
+    >;
+    if (!properties) return data;
+
+    const searchProperties = (
+      properties: Record<string, Record<string, unknown>>,
+      baseKey: string
+    ) => {
+      for (const key of Object.keys(properties)) {
+        const item = properties[key];
+
+        const inputMode = item.input_mode;
+
+        let value: string | number | boolean | object | null | undefined = "";
+
+        switch (inputMode) {
+          case "auto_populated_updated_at":
+            value = Math.floor(Date.now() / 1000);
+            break;
+          case "auto_populated_client":
+            value = CLIENT;
+        }
+
+        if (!value && !item.format) {
+          switch (item.type) {
+            case "array":
+              value = [];
+              break;
+            case "object":
+              value = {};
+              break;
+            case "string":
+              value = "";
+              break;
+            case "integer":
+              value = 0;
+              break;
+            case "boolean":
+              value = false;
+              break;
+            case "null":
+              value = null;
+              break;
+            default:
+              value = "";
+          }
+        } else if (!value) {
+          value = undefined;
+        }
+
+        const dataKey = `${baseKey ? `${baseKey}.` : ""}${key}`;
+        data[dataKey] = value;
+
+        if (item.properties) {
+          // ネストされたプロパティが存在する場合は再帰的に探索
+          searchProperties(
+            item.properties as Record<string, Record<string, unknown>>,
+            key
+          );
+        }
+      }
+    };
+
+    searchProperties(properties, "");
+
+    return data;
+  } catch (e) {
+    return {};
+  }
+};
+
+type ContentValue = {
+  [key in string]:
+    | string
+    | boolean
+    | number
+    | Record<string | number, ContentValue>
+    | Array<unknown>;
+};
+
+export const parseContentValue = (content: Content, schema: Schema) => {
+  const contentValue: ContentValue = {};
+
+  for (const [key, property] of Object.entries(
+    schema.schema.properties as Record<
+      string | number,
+      Record<string | number, unknown>
+    >
+  )) {
+    const field = content.fields?.[key];
+    if (!field) {
+      continue;
+    }
+
+    switch (property?.type) {
+      case "array" || "object":
+        contentValue[key] = field[0];
+        break;
+      case "integer":
+        contentValue[key] = Number(field[0]);
+        break;
+      case "boolean":
+        contentValue[key] = field[0].toLowerCase() === "true";
+        break;
+      default:
+        contentValue[key] = field;
+        break;
+    }
+  }
+
+  if (content.content) {
+    contentValue["content"] = content.content;
+  }
+
+  return contentValue;
 };

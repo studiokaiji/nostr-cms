@@ -1,10 +1,34 @@
-import { AppShell, Box, Card, NavLink } from "@mantine/core";
+import {
+  AppShell,
+  Box,
+  Card,
+  NavLinkProps,
+  NavLink as _NavLink,
+} from "@mantine/core";
 import { Link, Outlet } from "react-router-dom";
-import { LogoWithTextile } from "./LogoWithTextile";
+import { Logo } from "../Logo";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
-import { useEffect } from "react";
+import { forwardRef, useEffect } from "react";
+import "./index.module.css";
+
+const NavLink = forwardRef<
+  HTMLAnchorElement,
+  NavLinkProps & JSX.IntrinsicElements["a"]
+>((props, ref) => (
+  <_NavLink
+    {...props}
+    styles={{
+      root: {},
+      ...props?.styles,
+    }}
+    ref={ref}
+    px="md"
+  >
+    {props.children}
+  </_NavLink>
+));
 
 export const AppShellFrame = () => {
   const { t } = useTranslation();
@@ -27,29 +51,26 @@ export const AppShellFrame = () => {
 
   return (
     <AppShell
-      navbar={{ width: 240, breakpoint: "sm", collapsed: { mobile: false } }}
-      padding="md"
+      navbar={{
+        width: 240,
+        breakpoint: "sm",
+        collapsed: { mobile: false },
+      }}
     >
       <AppShell.Navbar
         styles={{
           navbar: {
             border: "none",
             background: "none",
+            paddingRight: 0,
           },
         }}
       >
         <Box p="md">
           <Link to="/">
-            <LogoWithTextile height={34} />
+            <Logo width={36} height={36} />
           </Link>
         </Box>
-        <NavLink
-          label={t("navigation.sites")}
-          defaultOpened
-          style={{ fontWeight: 600 }}
-        >
-          <NavLink label="SiteA" />
-        </NavLink>
         <NavLink
           label={t("navigation.contents")}
           defaultOpened
@@ -66,15 +87,23 @@ export const AppShellFrame = () => {
         </NavLink>
       </AppShell.Navbar>
 
-      <AppShell.Main style={{ width: "100%" }}>
+      <AppShell.Main style={{ width: "100%" }} pt="md" pr="md">
         <Card
           radius="xl"
-          p="xl"
+          p={0}
           style={{
-            minHeight: "calc(100dvh - 2rem)",
+            height: "calc(100dvh - 2rem)",
           }}
         >
-          <Outlet />
+          <Box
+            p="xl"
+            style={{
+              overflowX: "scroll",
+              overflowY: "scroll",
+            }}
+          >
+            <Outlet />
+          </Box>
         </Card>
       </AppShell.Main>
     </AppShell>

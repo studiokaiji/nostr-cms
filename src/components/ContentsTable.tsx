@@ -1,9 +1,10 @@
 import { Content } from "@/services/content";
 import { Schema } from "@/services/general/schema";
 import { ActionIcon, Anchor, Badge, Image, Table } from "@mantine/core";
+import { IconEdit } from "@tabler/icons-react";
+import { t } from "i18next";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { IconEdit } from "@tabler/icons-react";
 
 type ContentsProps = {
   schema: Schema;
@@ -15,14 +16,16 @@ type ContentsProps = {
 export const ContentsTable = ({ schema, contents }: ContentsProps) => {
   const { i18n, t } = useTranslation();
 
-  const columns = useMemo(
-    () => [
-      t("contents.status"),
-      ...schema.fields.map(({ label, key }) => label || key),
-      <span />,
-    ],
-    [t, schema.fields]
-  );
+  const filteredSchemaList = useMemo(() => {
+    return Object.entries(schema.schema.properties).filter(
+      ([key, value]) =>
+        key &&
+        key !== "content" &&
+        value.type !== "array" &&
+        value.type !== "object"
+    );
+  }, [schema]);
+
   const rows: React.ReactNode[] = useMemo(() => {
     if (!contents) return [];
 
@@ -39,78 +42,48 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
         </Badge>,
       ];
 
-      for (const field of schema.fields) {
-        try {
-          const data = content.fields?.[field.key];
-          if (!data || !data.length) {
-            rowChildren.push(<span />);
-            continue;
-          }
+      const dataKeys = filteredSchemaList.map(([k]) => k);
 
-          const unit = field.type.unit;
-          const primitive = field.type.primitive;
+      for (const key of dataKeys) {
+        const dataSchema = schema.schema.properties[key];
+        const data = content.fields?.[key];
 
-          if (primitive === "date" || primitive === "updatedAt") {
-            try {
-              const parsedData = [
-                new Date(Number(data[0]) * 1000).toLocaleDateString(
-                  i18n.language
-                ),
-              ];
-              rowChildren.push(parsedData);
-            } catch (e) {
-              rowChildren.push(<span />);
-              console.error(e);
-            }
-            continue;
-          } else if (
-            primitive === "text" ||
-            primitive === "number" ||
-            primitive === "boolean" ||
-            primitive === "time"
-          ) {
-            if (unit === "array") {
-              rowChildren.push(data.join(", "));
-            } else {
-              rowChildren.push(data[0]);
-            }
-            continue;
-          } else {
-            if (primitive === "image") {
-              rowChildren.push(
-                <Image
-                  radius="sm"
-                  width="auto"
-                  style={{ width: "auto" }}
-                  height={50}
-                  fit="contain"
-                  src={data[0]}
-                />
-              );
-            } else if (primitive === "url") {
-              if (unit === "array") {
-                data.map((d) => <Anchor href={d} target="_blank" />);
-              } else {
-                let url = data[0];
-                if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                  url = "https://" + url;
-                }
-                rowChildren.push(
-                  <Anchor href={url} target="_blank">
-                    {data[0]}
-                  </Anchor>
-                );
-              }
-              continue;
-            } else {
-              rowChildren.push(<span />);
-            }
-          }
-        } catch (e) {
-          console.error(e);
+        if (!data || !data.length) {
+          rowChildren.push(<span />);
           continue;
         }
+
+        if (
+          dataSchema.format === "uri" &&
+          dataSchema.input_mode === "image_upload"
+        ) {
+          rowChildren.push(
+            <Image
+              radius="sm"
+              width="auto"
+              style={{ width: "auto" }}
+              height={50}
+              fit="contain"
+              src={data[0]}
+            />
+          );
+        } else if (
+          dataSchema.type === "integer" &&
+          dataSchema.input_mode === "auto_populated_updated_at"
+        ) {
+          const parsedData = [
+            new Date(Number(data[0]) * 1000).toLocaleDateString(i18n.language),
+          ];
+          rowChildren.push(parsedData);
+        } else {
+          const isOverflowed = data[0].length > 80;
+          const sliced = data[0].slice(0, 80);
+          const text = `${sliced}${isOverflowed ? "..." : ""}`;
+          rowChildren.push(text);
+        }
       }
+
+      rowChildren.push(<div>{content.sites.join(",")}</div>);
 
       rowChildren.push(
         <ActionIcon
@@ -133,14 +106,26 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
     }
 
     return returnRows;
-  }, [contents, i18n.language, schema.fields, schema.id, t]);
+  }, [contents, filteredSchemaList, i18n.language, schema, t]);
 
   return (
     <Table>
       <Table.Thead>
         <Table.Tr>
-          {columns.map((column) => (
-            <Table.Th key={column.toString()}>{column}</Table.Th>
+          {[
+            t("contents.status"),
+            ...filteredSchemaList.map(
+              ([key, p]) => p?.title || p?.label || key
+            ),
+            t("contents.sites"),
+            "",
+          ].map((column) => (
+            <Table.Th
+              key={String(column)}
+              style={{ whiteSpace: "nowrap", lineHeight: 3 }}
+            >
+              {String(column)}
+            </Table.Th>
           ))}
         </Table.Tr>
       </Table.Thead>

@@ -5,75 +5,60 @@ export const HOSTR_RELAYS_KEY = "nostr-cms.hostr-relays";
 export const CUSTOM_APP_DATA_RELAYS_KEY = "nostr-cms.app-data-relays";
 export const DEFAULT_BASIC_RELAYS = [
   "ws://127.0.0.1:7002",
-  // 'wss://yabu.me',
-  // 'wss://relay.damus.io',
+  // "wss://yabu.me",
+  // "wss://relay.damus.io",
   // 'wss://nos.lol',
   // 'wss://relay.snort.social',
 ];
 export const DEFAULT_HOSTR_RELAYS = ["wss://r.hostr.cc"];
 export const DEFAULT_CUSTOM_APP_DATA_RELAYS = ["ws://127.0.0.1:7002"];
 export const CLIENT = "noscms.pages.dev";
-export const RESERVED_CONTENT_TAGS = ["d", "s", "o"];
+export const RESERVED_CONTENT_TAGS = ["d", "s", "h"];
 export const RESERVED_SCHEMA_TAGS = ["d", "title", "t", "articles"];
-export const CREATED_AT_VARIABLE = 'VAR_CREATED_AT';
+export const CREATED_AT_VARIABLE = "VAR_CREATED_AT";
 export const ARTICLES_SCHEMA: Schema = {
   id: "articles",
   label: "Articles",
+  caption: "Normal article's schema",
   type: "",
-  fields: [
-    {
-      key: "image",
-      label: "Image",
-      type: {
-        unit: "single",
-        primitive: "image",
+  kinds: [30023, 30024],
+  schema: {
+    type: "object",
+    properties: {
+      image: {
+        type: "string",
+        format: "uri",
+        title: "Image",
+        description: "An image URL.",
+        input_mode: "image_upload",
       },
-      userEditable: true,
-      optional: true,
-    },
-    {
-      key: "title",
-      label: "Title",
-      type: {
-        unit: "single",
-        primitive: "text",
+      title: {
+        type: "string",
+        title: "Title",
       },
-      userEditable: true,
-      optional: false,
-    },
-    {
-      key: "summary",
-      label: "Summary",
-      type: {
-        unit: "single",
-        primitive: "text",
+      summary: {
+        type: "string",
+        title: "Summary",
       },
-      userEditable: true,
-      optional: true,
-    },
-    {
-      key: "updated_at",
-      label: "Updated At",
-      type: {
-        unit: "single",
-        primitive: "updatedAt",
+      updated_at: {
+        type: "integer",
+        title: "Updated At",
+        input_mode: "auto_populated_updated_at",
       },
-      userEditable: false,
-      optional: false,
-    },
-    {
-      key: "client",
-      label: "Client",
-      type: {
-        unit: "single",
-        primitive: "url",
+      client: {
+        type: "string",
+        title: "Client",
+        input_mode: "auto_populated_client",
       },
-      userEditable: false,
-      optional: false,
+      content: {
+        type: "string",
+        title: "Content",
+        input_mode: "markdown",
+      },
     },
-  ],
-  writeRule: {
-    rule: "onlyAuthor",
+    required: ["title", "updated_at", "client"],
   },
-  content: "optional",
+  write_rule: {
+    rule: "only_author",
+  },
 };

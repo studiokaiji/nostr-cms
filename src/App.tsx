@@ -1,4 +1,5 @@
 import "@mantine/core/styles.css";
+import "@mantine/carousel/styles.css";
 import "./i18n/i18n";
 
 import { MantineProvider } from "@mantine/core";
