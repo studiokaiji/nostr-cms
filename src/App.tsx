@@ -10,7 +10,6 @@ import { AppShellFrame } from "./components/AppShellFrame";
 import { ContentSchemaPage } from "./pages/contents/[schemaId]";
 import { AddContentPage } from "./pages/contents/[schemaId]/addContent";
 import { EditContentPage } from "./pages/contents/items/[contentId]";
-import { CreateSitePage } from "./pages/sites/create";
 
 export default function App() {
   return (
@@ -29,9 +28,6 @@ export default function App() {
                     element={<EditContentPage />}
                   />
                 </Route>
-              </Route>
-              <Route path="sites">
-                <Route path="create" element={<CreateSitePage />} />
               </Route>
             </Route>
           </Routes>

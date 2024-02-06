@@ -72,13 +72,6 @@ export const AppShellFrame = () => {
           </Link>
         </Box>
         <NavLink
-          label={t("navigation.sites")}
-          defaultOpened
-          style={{ fontWeight: 600 }}
-        >
-          <NavLink label="SiteA" />
-        </NavLink>
-        <NavLink
           label={t("navigation.contents")}
           defaultOpened
           style={{ fontWeight: 600 }}
