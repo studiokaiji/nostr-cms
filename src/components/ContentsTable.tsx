@@ -1,8 +1,7 @@
 import { Content } from "@/services/content";
 import { Schema } from "@/services/general/schema";
-import { ActionIcon, Anchor, Badge, Image, Table } from "@mantine/core";
+import { ActionIcon, Badge, Image, Table } from "@mantine/core";
 import { IconEdit } from "@tabler/icons-react";
-import { t } from "i18next";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,11 +17,7 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
 
   const filteredSchemaList = useMemo(() => {
     return Object.entries(schema.schema.properties).filter(
-      ([key, value]) =>
-        key &&
-        key !== "content" &&
-        value.type !== "array" &&
-        value.type !== "object"
+      ([key]) => key && key !== "content"
     );
   }, [schema]);
 
@@ -45,7 +40,10 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
       const dataKeys = filteredSchemaList.map(([k]) => k);
 
       for (const key of dataKeys) {
-        const dataSchema = schema.schema.properties[key];
+        const dataSchema = schema.schema.properties[key] as Record<
+          string,
+          unknown
+        >;
         const data = content.fields?.[key];
 
         if (!data || !data.length) {
@@ -112,9 +110,18 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
         <Table.Tr>
           {[
             t("contents.status"),
-            ...filteredSchemaList.map(
-              ([key, p]) => p?.title || p?.label || key
-            ),
+            ...filteredSchemaList.map(([key, p]) => {
+              if (p && typeof p === "object") {
+                if ("title" in p && p.title) {
+                  return p.title;
+                }
+                if ("label" in p && p.label) {
+                  return p.label;
+                }
+              }
+              return key;
+            }),
+            t("contents.sites"),
             "",
           ].map((column) => (
             <Table.Th

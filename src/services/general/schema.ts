@@ -2,6 +2,7 @@ import { SimplePool, type Event } from "nostr-tools";
 import { getCustomAppDataRelays } from "../relay";
 import { readyNostr } from "nip07-awaiter";
 import { safeParseJson } from "@/utils/safeParseJson";
+import { RJSFSchema } from "@rjsf/utils";
 
 const pool = new SimplePool();
 
@@ -112,6 +113,7 @@ const eventToSchema = (event: Event) => {
   if (!isValidSchemaContent(parsed)) {
     throw Error("Invalid Schema");
   }
+
   schema.schema = parsed;
 
   return schema as Schema;
@@ -159,14 +161,15 @@ export type Schema = {
   };
   type: string;
   caption: string;
-  schema: SchemaProperties;
+  schema: SchemaContent;
 };
 
-export type SchemaProperties = Record<string | number, unknown>;
+export type SchemaProperties = Omit<RJSFSchema, "title" | "description">;
 
-export type RawSchemaContent = {
+export type SchemaContent = {
   type: "object";
   properties: SchemaProperties;
+  required: string[];
 };
 
 const isValidWriteRule = (str: unknown): str is WriteRule => {
@@ -175,7 +178,7 @@ const isValidWriteRule = (str: unknown): str is WriteRule => {
 
 const isValidSchemaContent = (
   schemaContent: unknown
-): schemaContent is RawSchemaContent => {
-  const c = schemaContent as RawSchemaContent;
-  return c?.type === "object" && !!c?.properties;
+): schemaContent is SchemaContent => {
+  const c = schemaContent as SchemaContent;
+  return c?.type === "object" && !!c?.properties && !!c?.required;
 };
