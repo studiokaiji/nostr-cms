@@ -320,7 +320,7 @@ export const parseContentValue = (content: Content, schema: Schema) => {
   }
 
   if (content.content) {
-    contentValue["content"] = content.content;
+    contentValue["contents"] = content.content;
   }
 
   return contentValue;

@@ -52,7 +52,7 @@ const Header = ({
   }
 
   const { data: schema } = useSuspenseQuery<Schema>({
-    queryKey: ["schema", schemaId],
+    queryKey: ["schemas", schemaId],
     queryFn: async () => {
       const schema = await getContentsSchema(schemaId);
       if (!schema) {
@@ -86,7 +86,7 @@ const ContentsList = ({
   }
 
   const { data: schema } = useSuspenseQuery<Schema>({
-    queryKey: ["schema", schemaId],
+    queryKey: ["schemas", schemaId],
     queryFn: async () => {
       const schema = await getContentsSchema(schemaId);
       if (!schema) {

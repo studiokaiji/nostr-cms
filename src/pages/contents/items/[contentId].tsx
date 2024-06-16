@@ -31,7 +31,7 @@ export const EditContentPage = () => {
   }
 
   const { data: schema } = useSuspenseQuery<Schema>({
-    queryKey: ["schema", schemaId],
+    queryKey: ["schemas", schemaId],
     queryFn: async () => {
       const schema = await getContentsSchema(schemaId);
       if (!schema) {
@@ -42,7 +42,7 @@ export const EditContentPage = () => {
   });
 
   const { data: content } = useSuspenseQuery({
-    queryKey: ["content", contentId],
+    queryKey: ["contents", contentId],
     queryFn: async () => getContent(contentId),
   });
 
