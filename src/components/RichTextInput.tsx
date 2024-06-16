@@ -41,7 +41,7 @@ export const RichTextInput = (props: {
     return () => {
       editor.off("update", callback);
     };
-  }, [editor, props.onChange]);
+  }, [editor, props]);
 
   return (
     <RichTextEditor
@@ -65,7 +65,7 @@ export const RichTextInput = (props: {
         },
       }}
     >
-      <RichTextEditor.Toolbar sticky stickyOffset={60}>
+      <RichTextEditor.Toolbar sticky stickyOffset={-32}>
         <RichTextEditor.ControlsGroup>
           <RichTextEditor.Bold />
           <RichTextEditor.Italic />

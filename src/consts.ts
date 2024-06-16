@@ -11,7 +11,12 @@ export const DEFAULT_BASIC_RELAYS = [
   "wss://relay.snort.social",
 ];
 export const DEFAULT_HOSTR_RELAYS = ["wss://r.hostr.cc"];
-export const DEFAULT_CUSTOM_APP_DATA_RELAYS = ["ws://127.0.0.1:7002"];
+export const DEFAULT_CUSTOM_APP_DATA_RELAYS = [
+  "ws://127.0.0.1:7002",
+  "wss://yabu.me",
+  "wss://relay.damus.io",
+  "wss://nos.lol",
+];
 export const CLIENT = "noscms.pages.dev";
 export const RESERVED_CONTENT_TAGS = ["d", "s", "h"];
 export const RESERVED_SCHEMA_TAGS = ["d", "title", "t", "articles"];

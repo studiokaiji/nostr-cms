@@ -2,9 +2,6 @@ import { BackButton } from "@/components/BackButton";
 import { Flex, Stack, Title } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 
-import "@mantine/tiptap/styles.css";
-
-import useSWR from "swr";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ContentInput,
@@ -12,6 +9,10 @@ import {
   publishContent,
 } from "@/services/content";
 import { ContentEditor } from "@/components/ContentEditor";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import type { Schema } from "@/services/general/schema";
+
+import "@mantine/tiptap/styles.css";
 
 export const AddContentPage = () => {
   const { schemaId } = useParams();
@@ -19,8 +20,15 @@ export const AddContentPage = () => {
     throw Error();
   }
 
-  const { data: schema } = useSWR(schemaId, getContentsSchema, {
-    keepPreviousData: true,
+  const { data: schema } = useSuspenseQuery<Schema>({
+    queryKey: ["schema", schemaId],
+    queryFn: async () => {
+      const schema = await getContentsSchema(schemaId);
+      if (!schema) {
+        throw Error("Schema does not exist");
+      }
+      return schema;
+    },
   });
 
   const { t } = useTranslation();

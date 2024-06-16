@@ -8,9 +8,10 @@ import {
 import { Link, Outlet } from "react-router-dom";
 import { Logo } from "../Logo";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 import { getAllContentsSchemas } from "@/services/content";
-import { forwardRef, useEffect } from "react";
+import { forwardRef, memo, Suspense } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import type { Schema } from "@/services/general/schema";
 import "./index.module.css";
 
 const NavLink = forwardRef<
@@ -32,22 +33,6 @@ const NavLink = forwardRef<
 
 export const AppShellFrame = () => {
   const { t } = useTranslation();
-  const { data: schemas } = useSWR("schemas", getAllContentsSchemas, {
-    keepPreviousData: true,
-    revalidateOnReconnect: false,
-    fallbackData: JSON.parse(
-      localStorage.getItem("nostrcms.pages.dev-default-schemas") || "[]"
-    ),
-  });
-
-  useEffect(() => {
-    if (schemas) {
-      localStorage.setItem(
-        "nostrcms.pages.dev-default-schemas",
-        JSON.stringify(schemas)
-      );
-    }
-  }, [schemas]);
 
   return (
     <AppShell
@@ -77,13 +62,10 @@ export const AppShellFrame = () => {
           style={{ fontWeight: 600 }}
         >
           <NavLink label={t("navigation.articles")} href="/contents/articles" />
-          {schemas?.map((schema) => (
-            <NavLink
-              key={schema.id}
-              href={`/contents/${schema.id}`}
-              label={schema.label}
-            />
-          ))}
+          <NavLink label={t("navigation.sites")} href="/contents/sites" />
+          <Suspense fallback={<div />}>
+            <ContentsLink />
+          </Suspense>
         </NavLink>
       </AppShell.Navbar>
 
@@ -109,3 +91,25 @@ export const AppShellFrame = () => {
     </AppShell>
   );
 };
+
+const ContentsLink = memo(() => {
+  const { data: schemas } = useSuspenseQuery<Schema[]>({
+    queryKey: ["schemas"],
+    queryFn: getAllContentsSchemas,
+    initialData: JSON.parse(
+      localStorage.getItem("nostrcms.pages.dev-default-schemas") || "[]"
+    ),
+  });
+
+  return (
+    <>
+      {schemas.map((schema) => (
+        <NavLink
+          key={schema.id}
+          href={`/contents/${schema.id}`}
+          label={schema.label}
+        />
+      ))}
+    </>
+  );
+});

@@ -16,6 +16,7 @@ import {
   CLIENT,
   CREATED_AT_VARIABLE,
   RESERVED_CONTENT_TAGS,
+  SITE_SCHEMA,
 } from "@/consts";
 import { readyNostr } from "nip07-awaiter";
 
@@ -53,6 +54,9 @@ export const getContents = async (
 export const getContentsSchema = async (schemaId: string) => {
   if (schemaId === "articles") {
     return ARTICLES_SCHEMA;
+  }
+  if (schemaId === "sites") {
+    return SITE_SCHEMA;
   }
   const schema = await getSchema(schemaId);
   return schema;

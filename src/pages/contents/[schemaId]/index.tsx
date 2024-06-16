@@ -7,12 +7,14 @@ import { Content, getContents, getContentsSchema } from "@/services/content";
 import { Schema } from "@/services/general/schema";
 import { ActionIcon, Button, Flex, Stack, Title } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  useSuspenseInfiniteQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { t } from "i18next";
 import { readyNostr } from "nip07-awaiter";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Suspense, useState } from "react";
 import { useParams } from "react-router-dom";
-import useSWR from "swr";
-import useSWRInfinite from "swr/infinite";
 
 const nostr = await readyNostr;
 const pubkey = await nostr.getPublicKey();
@@ -20,94 +22,136 @@ const pubkey = await nostr.getPublicKey();
 const LIMIT = 30;
 
 export const ContentSchemaPage = () => {
+  const [articlesTarget, setArticlesTarget] = useState<ContentsTarget>("all");
+
+  return (
+    <>
+      <Header
+        contentsTargetSelect={
+          <ContentsTargetSelect
+            target={articlesTarget}
+            onChange={setArticlesTarget}
+          />
+        }
+      />
+      <Suspense>
+        <ContentsList articlesTarget={articlesTarget} />
+      </Suspense>
+    </>
+  );
+};
+
+const Header = ({
+  contentsTargetSelect,
+}: {
+  contentsTargetSelect: React.ReactNode;
+}) => {
   const { schemaId } = useParams();
   if (!schemaId) {
     throw Error();
   }
 
-  const { data: schema } = useSWR(schemaId, getContentsSchema, {
-    keepPreviousData: true,
+  const { data: schema } = useSuspenseQuery<Schema>({
+    queryKey: ["schema", schemaId],
+    queryFn: async () => {
+      const schema = await getContentsSchema(schemaId);
+      if (!schema) {
+        throw Error("Schema does not exist");
+      }
+      return schema;
+    },
   });
 
-  const [articlesTarget, setArticlesTarget] = useState<ContentsTarget>("all");
+  return (
+    <Stack>
+      <Title mb="md">{schema.label}</Title>
+      <Flex justify="space-between" align="center">
+        {contentsTargetSelect}
+        <Button component="a" href={`/contents/${schemaId}/add-content`}>
+          + {t("contents.addContent")}
+        </Button>
+      </Flex>
+    </Stack>
+  );
+};
+
+const ContentsList = ({
+  articlesTarget,
+}: {
+  articlesTarget: ContentsTarget;
+}) => {
+  const { schemaId } = useParams();
+  if (!schemaId) {
+    throw Error();
+  }
+
+  const { data: schema } = useSuspenseQuery<Schema>({
+    queryKey: ["schema", schemaId],
+    queryFn: async () => {
+      const schema = await getContentsSchema(schemaId);
+      if (!schema) {
+        throw Error("Schema does not exist");
+      }
+      return schema;
+    },
+  });
 
   const getKey = (
-    _: number,
-    previousData: Content[] | null
-  ): [string, Schema, ContentsTarget, Content[] | null, number] | null => {
-    if (!schema || (previousData && !previousData.length)) return null;
-    return [
-      `contents/${schemaId}`,
-      schema,
-      articlesTarget,
-      previousData,
-      LIMIT,
-    ];
+    previousData: Content | null
+  ): [string, ContentsTarget, Content | null, number] => {
+    return [`contents/${schema.id}`, articlesTarget, previousData, LIMIT];
   };
 
   const {
     data: contents,
     isLoading,
-    size,
-    setSize,
-  } = useSWRInfinite(
-    getKey,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ([_url, schema, target, prev, limit]) =>
-      getContents(
-        { target },
-        {
-          authors:
-            schema.write_rule.rule === "allow_list"
-              ? schema?.write_rule.allow_list
-              : schema!.write_rule.rule === "only_author"
-              ? [pubkey]
-              : undefined,
-          "#s": schemaId === "articles" ? undefined : [schemaId],
-          limit,
-          until:
-            prev && prev.length
-              ? prev.slice(-1)[0].event.created_at
-              : undefined,
-        }
-      )
-  );
-
-  const { t } = useTranslation();
-
-  if (!schema || !contents) {
-    return <div />;
-  }
+    hasPreviousPage,
+    hasNextPage,
+    fetchPreviousPage,
+    fetchNextPage,
+  } = useSuspenseInfiniteQuery({
+    queryKey: getKey(null),
+    queryFn: ({ pageParam }) => {
+      const query = { target: articlesTarget };
+      const filter = {
+        authors:
+          schema?.write_rule.rule === "allow_list"
+            ? schema?.write_rule.allow_list
+            : schema!.write_rule.rule === "only_author"
+            ? [pubkey]
+            : undefined,
+        "#s": schemaId === "articles" ? undefined : [schemaId],
+        limit: LIMIT,
+        since: pageParam,
+      };
+      return getContents(query, filter);
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.length < LIMIT) return undefined;
+      return lastPage.slice(-1)[0].event.created_at;
+    },
+    initialPageParam: 0,
+  });
 
   return (
-    <Stack>
-      <Title>{schema.label}</Title>
-      <Flex justify="space-between" align="center">
-        <ContentsTargetSelect
-          target={articlesTarget}
-          onChange={setArticlesTarget}
-        />
-        <Button component="a" href={`/contents/${schemaId}/add-content`}>
-          + {t("contents.addContent")}
-        </Button>
-      </Flex>
-      <ContentsTable schema={schema} contents={contents[size - 1]} />
-      <Flex gap="xs">
+    <>
+      <ContentsTable schema={schema} contents={contents?.pages.flat()} />
+      <Flex gap="xs" mt="md">
         <ActionIcon
           variant="light"
-          disabled={size <= 1 || isLoading}
-          onClick={() => setSize((size) => size - 1)}
+          disabled={!hasPreviousPage || isLoading}
+          onClick={() => fetchPreviousPage()}
         >
           <IconChevronLeft />
         </ActionIcon>
         <ActionIcon
           variant="light"
-          disabled={contents[size - 1]?.length < LIMIT || isLoading}
-          onClick={() => setSize((size) => size + 1)}
+          disabled={!hasNextPage || isLoading}
+          onClick={() => fetchNextPage()}
         >
           <IconChevronRight />
         </ActionIcon>
       </Flex>
-    </Stack>
+    </>
   );
 };

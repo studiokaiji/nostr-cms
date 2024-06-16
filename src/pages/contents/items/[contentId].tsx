@@ -17,11 +17,12 @@ import {
   useMantineTheme,
   Box,
 } from "@mantine/core";
-import useSWR from "swr";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import { IconAlertHexagonFilled, IconTrashX } from "@tabler/icons-react";
 import { useDisclosure } from "@mantine/hooks";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Schema } from "@/services/general/schema";
 
 export const EditContentPage = () => {
   const { schemaId, contentId } = useParams();
@@ -29,18 +30,21 @@ export const EditContentPage = () => {
     throw Error();
   }
 
-  const { data: schema } = useSWR(schemaId, getContentsSchema, {
-    keepPreviousData: true,
+  const { data: schema } = useSuspenseQuery<Schema>({
+    queryKey: ["schema", schemaId],
+    queryFn: async () => {
+      const schema = await getContentsSchema(schemaId);
+      if (!schema) {
+        throw Error("Schema does not exist");
+      }
+      return schema;
+    },
   });
 
-  const { data: content } = useSWR(
-    [schemaId, contentId],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ([_, id]) => getContent(id),
-    {
-      keepPreviousData: true,
-    }
-  );
+  const { data: content } = useSuspenseQuery({
+    queryKey: ["content", contentId],
+    queryFn: async () => getContent(contentId),
+  });
 
   const { t } = useTranslation();
 
@@ -78,7 +82,6 @@ export const EditContentPage = () => {
         <ContentEditor
           schema={schema}
           content={content}
-          type="content"
           onPublishRequest={publish}
         />
       )}

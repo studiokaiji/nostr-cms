@@ -121,8 +121,6 @@ export const ContentsTable = ({ schema, contents }: ContentsProps) => {
               }
               return key;
             }),
-            t("contents.sites"),
-            "",
           ].map((column) => (
             <Table.Th
               key={String(column)}
